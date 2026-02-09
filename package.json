@@ -1,16 +1,26 @@
 {
   "name": "kill-feed",
   "version": "1.0.0",
-  "description": "",
+  "description": "OBS Kill Feed with Moderator Control and Admin Authentication",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
-  "keywords": [],
+  "keywords": [
+    "obs",
+    "streaming",
+    "overlay",
+    "websocket",
+    "moderator"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "cors": "^2.8.6",
     "express": "^5.2.1",

@@ -2,132 +2,210 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Panel - Moderator Management</title>
   <style>
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
     
     body {
-      font-family: Arial, sans-serif;
-      max-width: 1000px;
-      margin: 50px auto;
-      padding: 20px;
-      background: #1a1a1a;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f0f0f;
       color: white;
+      min-height: 100vh;
     }
     
-    h1 {
+    /* Login Screen */
+    #loginScreen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .login-box {
+      background: #1a1a1a;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid #333;
+    }
+    
+    .login-box h1 {
       text-align: center;
       margin-bottom: 10px;
-      color: #FFD700;
+      font-size: 32px;
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
     
-    h2 {
-      margin-top: 30px;
-      border-bottom: 2px solid #444;
-      padding-bottom: 10px;
-    }
-    
-    #connectionStatus {
+    .login-box p {
       text-align: center;
-      padding: 10px;
+      color: #999;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    
+    .form-group {
       margin-bottom: 20px;
-      border-radius: 5px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
       font-weight: bold;
+      font-size: 14px;
     }
     
-    .connected {
-      background: rgba(76, 175, 80, 0.2);
-      color: #4CAF50;
-    }
-    
-    .disconnected {
-      background: rgba(244, 67, 54, 0.2);
-      color: #F44336;
-    }
-    
-    .section {
-      background: #2a2a2a;
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-    }
-    
-    .moderator-card {
-      background: rgba(0,0,0,0.3);
+    .form-group input {
+      width: 100%;
       padding: 15px;
-      margin: 10px 0;
+      font-size: 16px;
       border-radius: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-left: 4px solid #FFC107;
+      border: 2px solid #333;
+      background: #0f0f0f;
+      color: white;
+      transition: border-color 0.3s;
     }
     
-    .moderator-info {
-      flex: 1;
+    .form-group input:focus {
+      outline: none;
+      border-color: #FFD700;
     }
     
-    .moderator-name {
+    .login-btn {
+      width: 100%;
+      padding: 15px;
       font-size: 18px;
       font-weight: bold;
-      margin-bottom: 5px;
-    }
-    
-    .moderator-details {
-      font-size: 12px;
-      color: #999;
-    }
-    
-    .moderator-actions {
-      display: flex;
-      gap: 10px;
-    }
-    
-    .btn {
-      padding: 10px 20px;
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      color: #000;
       border: none;
-      border-radius: 5px;
-      font-weight: bold;
+      border-radius: 8px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: transform 0.2s;
     }
     
-    .btn:hover {
-      opacity: 0.8;
+    .login-btn:hover {
       transform: translateY(-2px);
     }
     
-    .btn-approve {
-      background: #4CAF50;
-      color: white;
+    .login-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
     
-    .btn-deny {
-      background: #FF5722;
-      color: white;
-    }
-    
-    .btn-kick {
-      background: #f44336;
-      color: white;
-    }
-    
-    .empty-state {
+    .error-message {
+      background: rgba(244, 67, 54, 0.2);
+      color: #f44336;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 15px;
       text-align: center;
-      padding: 40px;
-      color: #666;
-      font-style: italic;
+      font-size: 14px;
+      display: none;
+    }
+    
+    .error-message.show {
+      display: block;
+    }
+    
+    /* Dashboard */
+    #dashboardPanel {
+      display: none;
+    }
+    
+    /* Header */
+    .dashboard-header {
+      background: #1a1a1a;
+      padding: 20px 30px;
+      border-bottom: 2px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .dashboard-title {
+      font-size: 28px;
+      font-weight: bold;
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(76, 175, 80, 0.2);
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+    }
+    
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #4CAF50;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .status-indicator.disconnected {
+      background: #f44336;
+    }
+    
+    .dashboard-content {
+      padding: 30px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .section {
+      background: #1a1a1a;
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 25px;
+      border: 1px solid #333;
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .section-title {
+      font-size: 22px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     
     .badge {
       display: inline-block;
-      padding: 3px 8px;
-      border-radius: 3px;
-      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 13px;
       font-weight: bold;
-      margin-left: 10px;
     }
     
     .badge-pending {
@@ -139,28 +217,183 @@
       background: #4CAF50;
       color: white;
     }
+    
+    .moderator-card {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 20px;
+      margin: 15px 0;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 4px solid;
+      transition: transform 0.2s;
+    }
+    
+    .moderator-card:hover {
+      transform: translateX(5px);
+    }
+    
+    .moderator-card.pending {
+      border-left-color: #FFC107;
+    }
+    
+    .moderator-card.approved {
+      border-left-color: #4CAF50;
+    }
+    
+    .moderator-info {
+      flex: 1;
+    }
+    
+    .moderator-name {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    
+    .moderator-details {
+      font-size: 13px;
+      color: #999;
+      line-height: 1.6;
+    }
+    
+    .moderator-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+    
+    .btn-approve {
+      background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+      color: white;
+    }
+    
+    .btn-deny {
+      background: linear-gradient(135deg, #FF5722 0%, #FF9800 100%);
+      color: white;
+    }
+    
+    .btn-kick {
+      background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
+      color: white;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+      font-style: italic;
+      font-size: 16px;
+    }
+    
+    @media (max-width: 768px) {
+      .dashboard-header {
+        padding: 15px;
+      }
+      
+      .dashboard-title {
+        font-size: 22px;
+      }
+      
+      .dashboard-content {
+        padding: 15px;
+      }
+      
+      .moderator-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+      
+      .moderator-actions {
+        width: 100%;
+      }
+      
+      .btn {
+        flex: 1;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>👑 Admin Panel</h1>
-  
-  <div id="connectionStatus" class="disconnected">
-    Connecting to server...
-  </div>
-  
-  <!-- Pending Connections -->
-  <div class="section">
-    <h2>⏳ Pending Moderator Requests <span class="badge badge-pending" id="pendingCount">0</span></h2>
-    <div id="pendingList">
-      <div class="empty-state">No pending requests</div>
+  <!-- Login Screen -->
+  <div id="loginScreen">
+    <div class="login-box">
+      <h1>👑 Admin Login</h1>
+      <p>Enter admin password to continue</p>
+      
+      <form id="loginForm" onsubmit="return false;">
+        <div class="form-group">
+          <label for="passwordInput">Password</label>
+          <input 
+            type="password" 
+            id="passwordInput" 
+            placeholder="Enter admin password"
+            autocomplete="current-password"
+          />
+        </div>
+        
+        <button type="submit" class="login-btn" onclick="attemptLogin()">
+          Login
+        </button>
+        
+        <div class="error-message" id="errorMessage">
+          Incorrect password. Please try again.
+        </div>
+      </form>
     </div>
   </div>
   
-  <!-- Approved Moderators -->
-  <div class="section">
-    <h2>✅ Approved Moderators <span class="badge badge-approved" id="approvedCount">0</span></h2>
-    <div id="approvedList">
-      <div class="empty-state">No approved moderators</div>
+  <!-- Dashboard Panel -->
+  <div id="dashboardPanel">
+    <div class="dashboard-header">
+      <div class="dashboard-title">👑 Admin Dashboard</div>
+      <div class="status-badge">
+        <div class="status-indicator" id="statusIndicator"></div>
+        <span id="connectionText">Connected</span>
+      </div>
+    </div>
+    
+    <div class="dashboard-content">
+      <!-- Pending Connections -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">
+            ⏳ Pending Requests
+            <span class="badge badge-pending" id="pendingCount">0</span>
+          </div>
+        </div>
+        <div id="pendingList">
+          <div class="empty-state">No pending requests</div>
+        </div>
+      </div>
+      
+      <!-- Approved Moderators -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">
+            ✅ Approved Moderators
+            <span class="badge badge-approved" id="approvedCount">0</span>
+          </div>
+        </div>
+        <div id="approvedList">
+          <div class="empty-state">No approved moderators</div>
+        </div>
+      </div>
     </div>
   </div>
   
@@ -169,26 +402,72 @@
   
   <script>
     const socket = io('https://killfeed-r756.onrender.com');
-    const statusEl = document.getElementById('connectionStatus');
+    
+    const loginScreen = document.getElementById('loginScreen');
+    const dashboardPanel = document.getElementById('dashboardPanel');
+    const passwordInput = document.getElementById('passwordInput');
+    const errorMessage = document.getElementById('errorMessage');
+    const statusIndicator = document.getElementById('statusIndicator');
+    const connectionText = document.getElementById('connectionText');
     const pendingListEl = document.getElementById('pendingList');
     const approvedListEl = document.getElementById('approvedList');
     const pendingCountEl = document.getElementById('pendingCount');
     const approvedCountEl = document.getElementById('approvedCount');
     
+    let isAuthenticated = false;
+    
     // Connection status
     socket.on('connect', () => {
-      console.log('Connected to server as admin');
-      statusEl.textContent = '✅ Connected as Admin';
-      statusEl.className = 'connected';
-      
-      // Identify as admin
-      socket.emit('identifyAsAdmin');
+      console.log('Connected to server');
+      if (isAuthenticated) {
+        statusIndicator.classList.remove('disconnected');
+        connectionText.textContent = 'Connected';
+      }
     });
     
     socket.on('disconnect', () => {
       console.log('Disconnected from server');
-      statusEl.textContent = '❌ Disconnected from server';
-      statusEl.className = 'disconnected';
+      if (isAuthenticated) {
+        statusIndicator.classList.add('disconnected');
+        connectionText.textContent = 'Disconnected';
+      }
+    });
+    
+    // Login function
+    function attemptLogin() {
+      const password = passwordInput.value;
+      if (!password) {
+        errorMessage.textContent = 'Please enter a password';
+        errorMessage.classList.add('show');
+        return;
+      }
+      
+      errorMessage.classList.remove('show');
+      socket.emit('authenticateAdmin', password);
+    }
+    
+    // Allow Enter key to submit
+    passwordInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        attemptLogin();
+      }
+    });
+    
+    // Authentication response
+    socket.on('adminAuthenticated', (success) => {
+      if (success) {
+        console.log('Admin authenticated successfully');
+        isAuthenticated = true;
+        loginScreen.style.display = 'none';
+        dashboardPanel.style.display = 'block';
+        passwordInput.value = '';
+      } else {
+        console.log('Admin authentication failed');
+        errorMessage.textContent = 'Incorrect password. Please try again.';
+        errorMessage.classList.add('show');
+        passwordInput.value = '';
+        passwordInput.focus();
+      }
     });
     
     // Update pending connections
@@ -204,13 +483,13 @@
       pendingListEl.innerHTML = '';
       pending.forEach(mod => {
         const card = document.createElement('div');
-        card.className = 'moderator-card';
+        card.className = 'moderator-card pending';
         card.innerHTML = `
           <div class="moderator-info">
             <div class="moderator-name">👤 ${escapeHtml(mod.name)}</div>
             <div class="moderator-details">
               Requested: ${new Date(mod.requestedAt).toLocaleString()}<br>
-              Socket ID: ${mod.socketId}
+              Socket ID: <code>${mod.socketId}</code>
             </div>
           </div>
           <div class="moderator-actions">
@@ -239,14 +518,13 @@
       approvedListEl.innerHTML = '';
       approved.forEach(mod => {
         const card = document.createElement('div');
-        card.className = 'moderator-card';
-        card.style.borderLeftColor = '#4CAF50';
+        card.className = 'moderator-card approved';
         card.innerHTML = `
           <div class="moderator-info">
             <div class="moderator-name">✅ ${escapeHtml(mod.name)}</div>
             <div class="moderator-details">
               Connected: ${new Date(mod.connectedAt).toLocaleString()}<br>
-              Socket ID: ${mod.socketId}
+              Socket ID: <code>${mod.socketId}</code>
             </div>
           </div>
           <div class="moderator-actions">
@@ -284,6 +562,9 @@
       div.textContent = text;
       return div.innerHTML;
     }
+    
+    // Focus password input on load
+    passwordInput.focus();
   </script>
 </body>
 </html>

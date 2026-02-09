@@ -9,6 +9,9 @@ const server = http.createServer(app);
 // Get port from environment or default to 3000
 const PORT = process.env.PORT || 3000;
 
+// Admin password from environment variable
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme123';
+
 // CORS configuration
 const io = new Server(server, {
   cors: {
@@ -45,22 +48,35 @@ let message = {
 // Connection management
 let pendingConnections = []; // Moderators waiting for approval
 let approvedModerators = {}; // { socketId: { name, socketId, connectedAt } }
-let adminSocketId = null; // The admin/streamer socket
+let adminSockets = new Set(); // Track multiple admin connections
 
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
   
-  // Identify as admin (streamer/approval panel)
-  socket.on('identifyAsAdmin', () => {
-    console.log('Admin connected:', socket.id);
-    adminSocketId = socket.id;
+  // Admin authentication
+  socket.on('authenticateAdmin', (password) => {
+    console.log('Admin authentication attempt:', socket.id);
     
-    // Send current state
-    socket.emit('countersUpdate', counters);
-    socket.emit('messageUpdate', message);
-    socket.emit('pendingConnectionsUpdate', pendingConnections);
-    socket.emit('approvedModeratorsUpdate', Object.values(approvedModerators));
+    if (password === ADMIN_PASSWORD) {
+      adminSockets.add(socket.id);
+      console.log('Admin authenticated:', socket.id);
+      
+      // Send success and current state
+      socket.emit('adminAuthenticated', true);
+      socket.emit('countersUpdate', counters);
+      socket.emit('messageUpdate', message);
+      socket.emit('pendingConnectionsUpdate', pendingConnections);
+      socket.emit('approvedModeratorsUpdate', Object.values(approvedModerators));
+    } else {
+      console.log('Admin authentication failed:', socket.id);
+      socket.emit('adminAuthenticated', false);
+    }
   });
+  
+  // Check if socket is authenticated admin
+  const isAdmin = (socketId) => {
+    return adminSockets.has(socketId);
+  };
   
   // Moderator requests access
   socket.on('requestModeratorAccess', (name) => {
@@ -74,14 +90,19 @@ io.on('connection', (socket) => {
     
     pendingConnections.push(request);
     
-    // Notify admin
-    if (adminSocketId) {
-      io.to(adminSocketId).emit('pendingConnectionsUpdate', pendingConnections);
-    }
+    // Notify all admins
+    adminSockets.forEach(adminId => {
+      io.to(adminId).emit('pendingConnectionsUpdate', pendingConnections);
+    });
   });
   
-  // Admin approves moderator
+  // Admin approves moderator (requires authentication)
   socket.on('approveModerator', (socketId) => {
+    if (!isAdmin(socket.id)) {
+      console.log('Unauthorized approve attempt:', socket.id);
+      return;
+    }
+    
     console.log('Approving moderator:', socketId);
     
     const request = pendingConnections.find(r => r.socketId === socketId);
@@ -103,16 +124,21 @@ io.on('connection', (socket) => {
       io.to(socketId).emit('countersUpdate', counters);
       io.to(socketId).emit('messageUpdate', message);
       
-      // Notify admin of updates
-      if (adminSocketId) {
-        io.to(adminSocketId).emit('pendingConnectionsUpdate', pendingConnections);
-        io.to(adminSocketId).emit('approvedModeratorsUpdate', Object.values(approvedModerators));
-      }
+      // Notify all admins
+      adminSockets.forEach(adminId => {
+        io.to(adminId).emit('pendingConnectionsUpdate', pendingConnections);
+        io.to(adminId).emit('approvedModeratorsUpdate', Object.values(approvedModerators));
+      });
     }
   });
   
-  // Admin denies moderator
+  // Admin denies moderator (requires authentication)
   socket.on('denyModerator', (socketId) => {
+    if (!isAdmin(socket.id)) {
+      console.log('Unauthorized deny attempt:', socket.id);
+      return;
+    }
+    
     console.log('Denying moderator:', socketId);
     
     // Remove from pending
@@ -121,14 +147,19 @@ io.on('connection', (socket) => {
     // Notify the moderator they're denied
     io.to(socketId).emit('moderatorDenied');
     
-    // Notify admin
-    if (adminSocketId) {
-      io.to(adminSocketId).emit('pendingConnectionsUpdate', pendingConnections);
-    }
+    // Notify all admins
+    adminSockets.forEach(adminId => {
+      io.to(adminId).emit('pendingConnectionsUpdate', pendingConnections);
+    });
   });
   
-  // Admin kicks moderator
+  // Admin kicks moderator (requires authentication)
   socket.on('kickModerator', (socketId) => {
+    if (!isAdmin(socket.id)) {
+      console.log('Unauthorized kick attempt:', socket.id);
+      return;
+    }
+    
     console.log('Kicking moderator:', socketId);
     
     delete approvedModerators[socketId];
@@ -136,10 +167,10 @@ io.on('connection', (socket) => {
     // Notify the moderator they're kicked
     io.to(socketId).emit('moderatorKicked');
     
-    // Notify admin
-    if (adminSocketId) {
-      io.to(adminSocketId).emit('approvedModeratorsUpdate', Object.values(approvedModerators));
-    }
+    // Notify all admins
+    adminSockets.forEach(adminId => {
+      io.to(adminId).emit('approvedModeratorsUpdate', Object.values(approvedModerators));
+    });
   });
   
   // Check if moderator is approved (helper function)
@@ -238,20 +269,25 @@ io.on('connection', (socket) => {
       console.log('Approved moderator disconnected:', approvedModerators[socket.id].name);
       delete approvedModerators[socket.id];
       
-      if (adminSocketId) {
-        io.to(adminSocketId).emit('approvedModeratorsUpdate', Object.values(approvedModerators));
-      }
+      // Notify all admins
+      adminSockets.forEach(adminId => {
+        io.to(adminId).emit('approvedModeratorsUpdate', Object.values(approvedModerators));
+      });
     }
     
     // Remove from pending if disconnected
+    const wasPending = pendingConnections.some(r => r.socketId === socket.id);
     pendingConnections = pendingConnections.filter(r => r.socketId !== socket.id);
-    if (adminSocketId) {
-      io.to(adminSocketId).emit('pendingConnectionsUpdate', pendingConnections);
+    if (wasPending) {
+      adminSockets.forEach(adminId => {
+        io.to(adminId).emit('pendingConnectionsUpdate', pendingConnections);
+      });
     }
     
-    // Clear admin if they disconnect
-    if (socket.id === adminSocketId) {
-      adminSocketId = null;
+    // Remove from admin sockets if they disconnect
+    if (adminSockets.has(socket.id)) {
+      adminSockets.delete(socket.id);
+      console.log('Admin disconnected:', socket.id);
     }
   });
 });
@@ -260,6 +296,7 @@ const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🔐 Admin password: ${ADMIN_PASSWORD === 'changeme123' ? '⚠️  USING DEFAULT PASSWORD!' : '✓ Custom password set'}`);
   console.log(`📺 OBS Overlay: ${BASE_URL}/obs-overlay.html`);
   console.log(`📺 OBS Message: ${BASE_URL}/obs-message.html`);
   console.log(`📺 OBS Celebration: ${BASE_URL}/obs-celebration.html`);
