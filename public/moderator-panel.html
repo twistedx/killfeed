@@ -447,6 +447,21 @@
         socket.emit('updateMessage', { text: '', visible: false });
       }
     }
+    // Celebration control function
+    function triggerCelebration() {
+      console.log('Triggering celebration');
+      socket.emit('triggerCelebration');
+      
+      // Visual feedback on button
+      const btn = document.getElementById('celebrateBtn');
+      btn.textContent = '🎉 FIRED! 🎉';
+      btn.style.transform = 'scale(0.95)';
+      
+      setTimeout(() => {
+        btn.textContent = '🎆 TRIGGER HURRAH! 🎆';
+        btn.style.transform = 'scale(1)';
+      }, 1000);
+    }
   </script>
 </body>
 </html>
