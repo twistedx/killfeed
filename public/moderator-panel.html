@@ -21,6 +21,12 @@
       margin-bottom: 10px;
     }
     
+    h2 {
+      margin-top: 30px;
+      border-bottom: 2px solid #444;
+      padding-bottom: 10px;
+    }
+    
     #connectionStatus {
       text-align: center;
       padding: 10px;
@@ -143,10 +149,128 @@
       opacity: 0.3;
       cursor: not-allowed;
     }
+    
+    /* Message Controls */
+    #messageControls {
+      background: #2a2a2a;
+      padding: 30px;
+      border-radius: 8px;
+      margin-top: 30px;
+    }
+    
+    .form-group {
+      margin: 15px 0;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    
+    textarea {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #444;
+      background: #1a1a1a;
+      color: white;
+      font-family: Arial, sans-serif;
+      resize: vertical;
+      min-height: 80px;
+    }
+    
+    .message-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .btn {
+      padding: 15px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn:hover {
+      opacity: 0.9;
+    }
+    
+    .btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    
+    .btn-primary {
+      background: #2196F3;
+      color: white;
+    }
+    
+    .btn-success {
+      background: #4CAF50;
+      color: white;
+    }
+    
+    .btn-warning {
+      background: #FF9800;
+      color: white;
+    }
+    
+    .btn-danger {
+      background: #f44336;
+      color: white;
+    }
+    
+    .message-preview {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 5px;
+      border-left: 4px solid #FFC107;
+    }
+    
+    .preview-label {
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 8px;
+    }
+    
+    .preview-text {
+      font-size: 18px;
+      color: #FFC107;
+      font-weight: bold;
+      word-wrap: break-word;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    
+    .status-visible {
+      background: #4CAF50;
+      color: white;
+    }
+    
+    .status-hidden {
+      background: #666;
+      color: white;
+    }
   </style>
 </head>
 <body>
-  <h1>🎮 Counter Control Panel</h1>
+  <h1>🎮 Stream Control Panel</h1>
   
   <div id="connectionStatus" class="disconnected">
     Connecting to server...
@@ -154,6 +278,8 @@
   
   <!-- Counter Controls -->
   <div id="counterControls">
+    <h2>📊 Counters</h2>
+    
     <div class="counter-section kills">
       <div class="counter-info">
         <div class="counter-name">💀 Kills</div>
@@ -190,6 +316,28 @@
     <button class="reset-all-btn" onclick="resetAllCounters()" id="resetBtn">Reset All Counters</button>
   </div>
   
+  <!-- Message Controls -->
+  <div id="messageControls">
+    <h2>📢 Scrolling Message <span class="status-badge status-hidden" id="messageStatus">Hidden</span></h2>
+    
+    <div class="form-group">
+      <label>Message Text:</label>
+      <textarea id="messageInput" placeholder="Enter your message here..."></textarea>
+    </div>
+    
+    <div class="message-buttons">
+      <button class="btn btn-primary" onclick="updateMessage()" id="updateBtn">Update Message</button>
+      <button class="btn btn-success" onclick="showMessage()" id="showBtn">Show Message</button>
+      <button class="btn btn-warning" onclick="hideMessage()" id="hideBtn">Hide Message</button>
+      <button class="btn btn-danger" onclick="clearMessage()" id="clearBtn">Clear Message</button>
+    </div>
+    
+    <div class="message-preview" id="messagePreview" style="display: none;">
+      <div class="preview-label">Current Message:</div>
+      <div class="preview-text" id="previewText"></div>
+    </div>
+  </div>
+  
   <!-- Load Socket.IO from CDN -->
   <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
   
@@ -201,6 +349,12 @@
     const killsDisplayEl = document.getElementById('killsDisplay');
     const extractedDisplayEl = document.getElementById('extractedDisplay');
     const kiaDisplayEl = document.getElementById('kiaDisplay');
+    
+    // Message elements
+    const messageInputEl = document.getElementById('messageInput');
+    const messageStatusEl = document.getElementById('messageStatus');
+    const messagePreviewEl = document.getElementById('messagePreview');
+    const previewTextEl = document.getElementById('previewText');
     
     // Get all buttons
     const allButtons = document.querySelectorAll('button');
@@ -228,6 +382,27 @@
       kiaDisplayEl.textContent = counters.kia || 0;
     });
     
+    // Update message display
+    socket.on('messageUpdate', (msg) => {
+      console.log('Message updated:', msg);
+      
+      if (msg.text) {
+        messageInputEl.value = msg.text;
+        previewTextEl.textContent = msg.text;
+        messagePreviewEl.style.display = 'block';
+      } else {
+        messagePreviewEl.style.display = 'none';
+      }
+      
+      if (msg.visible) {
+        messageStatusEl.textContent = 'Visible';
+        messageStatusEl.className = 'status-badge status-visible';
+      } else {
+        messageStatusEl.textContent = 'Hidden';
+        messageStatusEl.className = 'status-badge status-hidden';
+      }
+    });
+    
     // Counter control functions
     function incrementCounter(type) {
       socket.emit('incrementCounter', type);
@@ -240,6 +415,36 @@
     function resetAllCounters() {
       if (confirm('Reset all counters to 0?')) {
         socket.emit('resetCounters');
+      }
+    }
+    
+    // Message control functions
+    function updateMessage() {
+      const text = messageInputEl.value.trim();
+      if (!text) {
+        alert('Please enter a message first');
+        return;
+      }
+      socket.emit('updateMessage', { text, visible: false });
+    }
+    
+    function showMessage() {
+      const text = messageInputEl.value.trim();
+      if (!text) {
+        alert('Please enter a message first');
+        return;
+      }
+      socket.emit('updateMessage', { text, visible: true });
+    }
+    
+    function hideMessage() {
+      socket.emit('hideMessage');
+    }
+    
+    function clearMessage() {
+      if (confirm('Clear the message?')) {
+        messageInputEl.value = '';
+        socket.emit('updateMessage', { text: '', visible: false });
       }
     }
   </script>
