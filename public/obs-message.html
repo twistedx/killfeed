@@ -33,31 +33,36 @@
       display: flex;
     }
     
+    #messageWrapper {
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+    }
+    
     #messageText {
       font-size: 32px;
       font-weight: bold;
       color: #FFC107;
-      white-space: nowrap;
+      text-align: center;
       padding: 0 50px;
-      animation: scroll 20s linear infinite;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+      white-space: nowrap;
     }
     
-    @keyframes scroll {
+    /* Scrolling animation for long messages */
+    #messageText.scrolling {
+      animation: scroll-horizontal 15s linear infinite;
+      padding: 0 100px;
+    }
+    
+    @keyframes scroll-horizontal {
       0% {
         transform: translateX(100%);
       }
       100% {
         transform: translateX(-100%);
       }
-    }
-    
-    /* Alternative: Static centered message */
-    #messageContainer.static #messageText {
-      animation: none;
-      width: 100%;
-      text-align: center;
-      padding: 0 100px;
     }
     
     #status {
@@ -77,7 +82,9 @@
 </head>
 <body>
   <div id="messageContainer">
-    <div id="messageText"></div>
+    <div id="messageWrapper">
+      <div id="messageText"></div>
+    </div>
   </div>
   
   <div id="status">Connecting...</div>
@@ -89,6 +96,7 @@
     // Connect to server
     const socket = io('https://killfeed-r756.onrender.com');
     const containerEl = document.getElementById('messageContainer');
+    const wrapperEl = document.getElementById('messageWrapper');
     const messageTextEl = document.getElementById('messageText');
     const statusEl = document.getElementById('status');
     
@@ -111,13 +119,27 @@
       
       if (msg.visible && msg.text) {
         containerEl.classList.add('visible');
-        // Restart animation
-        messageTextEl.style.animation = 'none';
+        
+        // Check if message is too long and needs scrolling
         setTimeout(() => {
-          messageTextEl.style.animation = '';
-        }, 10);
+          const textWidth = messageTextEl.offsetWidth;
+          const containerWidth = wrapperEl.offsetWidth;
+          
+          console.log('Text width:', textWidth, 'Container width:', containerWidth);
+          
+          if (textWidth > containerWidth * 0.8) {
+            // Message is too long, enable scrolling
+            messageTextEl.classList.add('scrolling');
+            wrapperEl.style.justifyContent = 'flex-start';
+          } else {
+            // Message fits, keep it centered
+            messageTextEl.classList.remove('scrolling');
+            wrapperEl.style.justifyContent = 'center';
+          }
+        }, 100);
       } else {
         containerEl.classList.remove('visible');
+        messageTextEl.classList.remove('scrolling');
       }
     });
   </script>
