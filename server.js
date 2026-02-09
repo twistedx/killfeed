@@ -100,10 +100,12 @@ io.on('connection', (socket) => {
   });
 });
 
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running on port ${PORT}`);
-  console.log(`📺 OBS Overlay: http://localhost:${PORT}/obs-overlay.html`);
-  console.log(`📺 OBS Message: http://localhost:${PORT}/obs-message.html`);
-  console.log(`📺 OBS Celebration: http://localhost:${PORT}/obs-celebration.html`);
-  console.log(`🎮 Moderator Panel: http://localhost:${PORT}/moderator-panel.html`);
+  console.log(`📺 OBS Overlay: ${BASE_URL}/obs-overlay.html`);
+  console.log(`📺 OBS Message: ${BASE_URL}/obs-message.html`);
+  console.log(`📺 OBS Celebration: ${BASE_URL}/obs-celebration.html`);
+  console.log(`🎮 Moderator Panel: ${BASE_URL}/moderator-panel.html`);
 });
