@@ -2,6 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <title>Moderator Panel</title>
   <style>
     * {
       box-sizing: border-box;
@@ -16,9 +17,106 @@
       color: white;
     }
     
+    /* Login Screen */
+    #loginScreen {
+      max-width: 400px;
+      margin: 100px auto;
+      text-align: center;
+    }
+    
+    #loginScreen h1 {
+      margin-bottom: 30px;
+    }
+    
+    #loginScreen input {
+      width: 100%;
+      padding: 15px;
+      font-size: 18px;
+      border-radius: 8px;
+      border: 2px solid #444;
+      background: #2a2a2a;
+      color: white;
+      margin-bottom: 15px;
+    }
+    
+    #loginScreen button {
+      width: 100%;
+      padding: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    
+    #loginScreen button:hover {
+      background: #45a049;
+    }
+    
+    #waitingScreen {
+      display: none;
+      max-width: 500px;
+      margin: 100px auto;
+      text-align: center;
+      padding: 40px;
+      background: #2a2a2a;
+      border-radius: 12px;
+    }
+    
+    #waitingScreen h2 {
+      margin-bottom: 20px;
+    }
+    
+    .spinner {
+      border: 4px solid #444;
+      border-top: 4px solid #FFC107;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    #deniedScreen {
+      display: none;
+      max-width: 500px;
+      margin: 100px auto;
+      text-align: center;
+      padding: 40px;
+      background: #2a2a2a;
+      border-radius: 12px;
+      border: 3px solid #f44336;
+    }
+    
+    #deniedScreen h2 {
+      color: #f44336;
+      margin-bottom: 20px;
+    }
+    
+    #controlPanel {
+      display: none;
+    }
+    
     h1 {
       text-align: center;
       margin-bottom: 10px;
+    }
+    
+    .moderator-info {
+      text-align: center;
+      padding: 10px;
+      background: rgba(76, 175, 80, 0.2);
+      border-radius: 5px;
+      margin-bottom: 20px;
+      color: #4CAF50;
+      font-weight: bold;
     }
     
     h2 {
@@ -270,71 +368,126 @@
   </style>
 </head>
 <body>
-  <h1>🎮 Stream Control Panel</h1>
-  
-  <div id="connectionStatus" class="disconnected">
-    Connecting to server...
+  <!-- Login Screen -->
+  <div id="loginScreen">
+    <h1>🎮 Moderator Login</h1>
+    <input type="text" id="moderatorName" placeholder="Enter your name" maxlength="30" />
+    <button onclick="requestAccess()">Request Access</button>
   </div>
   
-  <!-- Counter Controls -->
-  <div id="counterControls">
-    <h2>📊 Counters</h2>
-    
-    <div class="counter-section kills">
-      <div class="counter-info">
-        <div class="counter-name">💀 Kills</div>
-        <div class="counter-display" id="killsDisplay">0</div>
-      </div>
-      <div class="counter-buttons">
-        <button class="counter-btn minus" onclick="decrementCounter('kills')" id="killsMinus">−</button>
-        <button class="counter-btn plus" onclick="incrementCounter('kills')" id="killsPlus">+</button>
-      </div>
-    </div>
-    
-    <div class="counter-section extracted">
-      <div class="counter-info">
-        <div class="counter-name">✅ Extracted</div>
-        <div class="counter-display" id="extractedDisplay">0</div>
-      </div>
-      <div class="counter-buttons">
-        <button class="counter-btn minus" onclick="decrementCounter('extracted')" id="extractedMinus">−</button>
-        <button class="counter-btn plus" onclick="incrementCounter('extracted')" id="extractedPlus">+</button>
-      </div>
-    </div>
-    
-    <div class="counter-section kia">
-      <div class="counter-info">
-        <div class="counter-name">☠️ KIA</div>
-        <div class="counter-display" id="kiaDisplay">0</div>
-      </div>
-      <div class="counter-buttons">
-        <button class="counter-btn minus" onclick="decrementCounter('kia')" id="kiaMinus">−</button>
-        <button class="counter-btn plus" onclick="incrementCounter('kia')" id="kiaPlus">+</button>
-      </div>
-    </div>
-    
-    <button class="reset-all-btn" onclick="resetAllCounters()" id="resetBtn">Reset All Counters</button>
+  <!-- Waiting for Approval Screen -->
+  <div id="waitingScreen">
+    <h2>⏳ Waiting for Approval</h2>
+    <div class="spinner"></div>
+    <p>Your request has been sent to the admin.<br>Please wait for approval...</p>
+    <p style="color: #999; font-size: 14px; margin-top: 20px;">Name: <strong id="waitingName"></strong></p>
   </div>
   
-  <!-- Message Controls -->
-  <div id="messageControls">
-    <h2>📢 Scrolling Message <span class="status-badge status-hidden" id="messageStatus">Hidden</span></h2>
+  <!-- Denied Screen -->
+  <div id="deniedScreen">
+    <h2>❌ Access Denied</h2>
+    <p>Your moderator request was denied by the admin.</p>
+    <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 30px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer;">
+      Try Again
+    </button>
+  </div>
+  
+  <!-- Main Control Panel (hidden until approved) -->
+  <div id="controlPanel">
+    <h1>🎮 Stream Control Panel</h1>
     
-    <div class="form-group">
-      <label>Message Text:</label>
-      <textarea id="messageInput" placeholder="Enter your message here..."></textarea>
+    <div class="moderator-info" id="moderatorInfo">
+      Logged in as: <span id="loggedInName"></span>
     </div>
     
-    <div class="message-buttons">
-      <button class="btn btn-primary" onclick="updateMessage()" id="updateBtn">Update Message</button>
-      <button class="btn btn-success" onclick="showMessage()" id="showBtn">Show Message</button>
-      <button class="btn btn-warning" onclick="hideMessage()" id="hideBtn">Hide Message</button>
-      <button class="btn btn-danger" onclick="clearMessage()" id="clearBtn">Clear Message</button>
+    <div id="connectionStatus" class="disconnected">
+      Connecting to server...
     </div>
     
-    <div class="message-preview" id="messagePreview" style="display: none;">
-      <div class="preview-label">Current Message:</div>
-      <div class="preview-text" id="previewText"></div>
+    <!-- Counter Controls -->
+    <div id="counterControls">
+      <h2>📊 Counters</h2>
+      
+      <div class="counter-section kills">
+        <div class="counter-info">
+          <div class="counter-name">💀 Kills</div>
+          <div class="counter-display" id="killsDisplay">0</div>
+        </div>
+        <div class="counter-buttons">
+          <button class="counter-btn minus" onclick="decrementCounter('kills')" id="killsMinus">−</button>
+          <button class="counter-btn plus" onclick="incrementCounter('kills')" id="killsPlus">+</button>
+        </div>
+      </div>
+      
+      <div class="counter-section extracted">
+        <div class="counter-info">
+          <div class="counter-name">✅ Extracted</div>
+          <div class="counter-display" id="extractedDisplay">0</div>
+        </div>
+        <div class="counter-buttons">
+          <button class="counter-btn minus" onclick="decrementCounter('extracted')" id="extractedMinus">−</button>
+          <button class="counter-btn plus" onclick="incrementCounter('extracted')" id="extractedPlus">+</button>
+        </div>
+      </div>
+      
+      <div class="counter-section kia">
+        <div class="counter-info">
+          <div class="counter-name">☠️ KIA</div>
+          <div class="counter-display" id="kiaDisplay">0</div>
+        </div>
+        <div class="counter-buttons">
+          <button class="counter-btn minus" onclick="decrementCounter('kia')" id="kiaMinus">−</button>
+          <button class="counter-btn plus" onclick="incrementCounter('kia')" id="kiaPlus">+</button>
+        </div>
+      </div>
+      
+      <button class="reset-all-btn" onclick="resetAllCounters()" id="resetBtn">Reset All Counters</button>
+    </div>
+    
+    <!-- Message Controls -->
+    <div id="messageControls">
+      <h2>📢 Scrolling Message <span class="status-badge status-hidden" id="messageStatus">Hidden</span></h2>
+      
+      <div class="form-group">
+        <label>Message Text:</label>
+        <textarea id="messageInput" placeholder="Enter your message here..."></textarea>
+      </div>
+      
+      <div class="message-buttons">
+        <button class="btn btn-primary" onclick="updateMessage()" id="updateBtn">Update Message</button>
+        <button class="btn btn-success" onclick="showMessage()" id="showBtn">Show Message</button>
+        <button class="btn btn-warning" onclick="hideMessage()" id="hideBtn">Hide Message</button>
+        <button class="btn btn-danger" onclick="clearMessage()" id="clearBtn">Clear Message</button>
+      </div>
+      
+      <div class="message-preview" id="messagePreview" style="display: none;">
+        <div class="preview-label">Current Message:</div>
+        <div class="preview-text" id="previewText"></div>
+      </div>
+    </div>
+    
+    <!-- Celebration Controls -->
+    <div id="celebrationControls" style="background: #2a2a2a; padding: 30px; border-radius: 8px; margin-top: 30px;">
+      <h2>🎉 Celebration</h2>
+      
+      <button class="btn" onclick="triggerCelebration()" id="celebrateBtn" style="
+        width: 100%;
+        padding: 30px;
+        font-size: 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      ">
+        🎆 TRIGGER HURRAH! 🎆
+      </button>
+      
+      <p style="text-align: center; color: #999; margin-top: 15px; font-size: 14px;">
+        Displays "HURRAH!" with fireworks for 5 seconds
+      </p>
     </div>
   </div>
   
@@ -343,6 +496,13 @@
   
   <script>
     const socket = io('https://killfeed-r756.onrender.com');
+    let moderatorName = '';
+    let isApproved = false;
+    
+    const loginScreen = document.getElementById('loginScreen');
+    const waitingScreen = document.getElementById('waitingScreen');
+    const deniedScreen = document.getElementById('deniedScreen');
+    const controlPanel = document.getElementById('controlPanel');
     const statusEl = document.getElementById('connectionStatus');
     
     // Counter display elements
@@ -359,23 +519,68 @@
     // Get all buttons
     const allButtons = document.querySelectorAll('button');
     
+    // Request moderator access
+    function requestAccess() {
+      const name = document.getElementById('moderatorName').value.trim();
+      if (!name) {
+        alert('Please enter your name');
+        return;
+      }
+      
+      moderatorName = name;
+      socket.emit('requestModeratorAccess', name);
+      
+      loginScreen.style.display = 'none';
+      waitingScreen.style.display = 'block';
+      document.getElementById('waitingName').textContent = name;
+    }
+    
     // Connection status
     socket.on('connect', () => {
       console.log('Connected to server');
-      statusEl.textContent = '✅ Connected to server';
-      statusEl.className = 'connected';
-      allButtons.forEach(btn => btn.disabled = false);
+      if (isApproved) {
+        statusEl.textContent = '✅ Connected to server';
+        statusEl.className = 'connected';
+      }
     });
     
     socket.on('disconnect', () => {
       console.log('Disconnected from server');
-      statusEl.textContent = '❌ Disconnected from server';
-      statusEl.className = 'disconnected';
-      allButtons.forEach(btn => btn.disabled = true);
+      if (isApproved) {
+        statusEl.textContent = '❌ Disconnected from server';
+        statusEl.className = 'disconnected';
+      }
+    });
+    
+    // Moderator approved
+    socket.on('moderatorApproved', () => {
+      console.log('Moderator access approved!');
+      isApproved = true;
+      
+      waitingScreen.style.display = 'none';
+      controlPanel.style.display = 'block';
+      
+      document.getElementById('loggedInName').textContent = moderatorName;
+      statusEl.textContent = '✅ Connected to server';
+      statusEl.className = 'connected';
+    });
+    
+    // Moderator denied
+    socket.on('moderatorDenied', () => {
+      console.log('Moderator access denied');
+      waitingScreen.style.display = 'none';
+      deniedScreen.style.display = 'block';
+    });
+    
+    // Moderator kicked
+    socket.on('moderatorKicked', () => {
+      alert('You have been kicked by the admin');
+      location.reload();
     });
     
     // Update counter displays
     socket.on('countersUpdate', (counters) => {
+      if (!isApproved) return;
       console.log('Counters updated:', counters);
       killsDisplayEl.textContent = counters.kills || 0;
       extractedDisplayEl.textContent = counters.extracted || 0;
@@ -384,6 +589,7 @@
     
     // Update message display
     socket.on('messageUpdate', (msg) => {
+      if (!isApproved) return;
       console.log('Message updated:', msg);
       
       if (msg.text) {
@@ -447,6 +653,7 @@
         socket.emit('updateMessage', { text: '', visible: false });
       }
     }
+    
     // Celebration control function
     function triggerCelebration() {
       console.log('Triggering celebration');
