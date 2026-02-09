@@ -44,6 +44,86 @@
       opacity: 0.9;
     }
     
+    /* Error/Info Messages */
+    .message-box {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      display: none;
+    }
+    
+    .message-box.error {
+      border-left: 5px solid #f44336;
+      display: block;
+    }
+    
+    .message-box.info {
+      border-left: 5px solid #2196F3;
+      display: block;
+    }
+    
+    .message-box h3 {
+      margin-bottom: 10px;
+      color: #333;
+    }
+    
+    .message-box p {
+      color: #666;
+      line-height: 1.6;
+    }
+    
+    /* Login Section */
+    .login-section {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    
+    .login-section h2 {
+      font-size: 28px;
+      margin-bottom: 15px;
+      color: #333;
+    }
+    
+    .login-section p {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 30px;
+    }
+    
+    .discord-login-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 32px;
+      font-size: 18px;
+      font-weight: bold;
+      background: #5865F2;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      box-shadow: 0 4px 16px rgba(88, 101, 242, 0.4);
+    }
+    
+    .discord-login-btn:hover {
+      background: #4752C4;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(88, 101, 242, 0.5);
+    }
+    
+    .discord-icon {
+      width: 24px;
+      height: 24px;
+    }
+    
     /* Cards Grid */
     .cards-grid {
       display: grid;
@@ -67,6 +147,15 @@
     .card:hover {
       transform: translateY(-8px);
       box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+    }
+    
+    .card.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .card.disabled:hover {
+      transform: none;
     }
     
     .card-icon {
@@ -117,131 +206,9 @@
       color: white;
     }
     
-    /* Login Section */
-    .login-section {
-      background: white;
-      border-radius: 16px;
-      padding: 30px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-      margin-bottom: 30px;
-    }
-    
-    .login-section h2 {
-      font-size: 24px;
-      margin-bottom: 20px;
-      color: #333;
-    }
-    
-    .login-tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      border-bottom: 2px solid #eee;
-    }
-    
-    .login-tab {
-      padding: 12px 24px;
-      background: none;
-      border: none;
-      font-size: 16px;
-      font-weight: bold;
-      color: #999;
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      transition: all 0.3s;
-    }
-    
-    .login-tab.active {
-      color: #667eea;
-      border-bottom-color: #667eea;
-    }
-    
-    .login-content {
-      display: none;
-    }
-    
-    .login-content.active {
-      display: block;
-    }
-    
-    .form-group {
-      margin-bottom: 20px;
-    }
-    
-    .form-group label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: bold;
-      font-size: 14px;
-      color: #333;
-    }
-    
-    .form-group input {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: 2px solid #ddd;
-      transition: border-color 0.3s;
-    }
-    
-    .form-group input:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-    
-    .login-btn {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      font-weight: bold;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    .badge-locked {
+      background: #999;
       color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-    
-    .login-btn:hover {
-      transform: translateY(-2px);
-    }
-    
-    .login-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    
-    .error-message {
-      background: rgba(244, 67, 54, 0.1);
-      color: #f44336;
-      padding: 12px;
-      border-radius: 8px;
-      margin-top: 15px;
-      text-align: center;
-      font-size: 14px;
-      display: none;
-      border: 1px solid rgba(244, 67, 54, 0.3);
-    }
-    
-    .error-message.show {
-      display: block;
-    }
-    
-    .success-message {
-      background: rgba(76, 175, 80, 0.1);
-      color: #4CAF50;
-      padding: 12px;
-      border-radius: 8px;
-      margin-top: 15px;
-      text-align: center;
-      font-size: 14px;
-      display: none;
-      border: 1px solid rgba(76, 175, 80, 0.3);
-    }
-    
-    .success-message.show {
-      display: block;
     }
     
     /* Info Section */
@@ -250,6 +217,7 @@
       border-radius: 16px;
       padding: 25px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      margin-bottom: 20px;
     }
     
     .info-section h3 {
@@ -275,6 +243,34 @@
       color: #667eea;
       font-weight: bold;
       margin-right: 8px;
+    }
+    
+    .requirements-box {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      margin-bottom: 20px;
+      border-left: 5px solid #667eea;
+    }
+    
+    .requirements-box h3 {
+      font-size: 20px;
+      margin-bottom: 15px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .requirements-box p {
+      color: #666;
+      line-height: 1.8;
+      margin-bottom: 15px;
+    }
+    
+    .requirements-box strong {
+      color: #667eea;
     }
     
     /* Footer */
@@ -333,6 +329,10 @@
         margin-bottom: 20px;
         justify-content: center;
       }
+      
+      .login-section {
+        padding: 25px;
+      }
     }
   </style>
 </head>
@@ -349,96 +349,71 @@
       <p>Stream Overlay Management Dashboard</p>
     </div>
     
+    <!-- Error/Info Messages -->
+    <div class="message-box" id="messageBox">
+      <h3 id="messageTitle"></h3>
+      <p id="messageText"></p>
+    </div>
+    
+    <!-- Requirements Box -->
+    <div class="requirements-box">
+      <h3>📋 Access Requirements</h3>
+      <p>
+        To use this system, you must:
+        <br><strong>1.</strong> Be a member of the TwistedXvs Discord server
+        <br><strong>2.</strong> Have the <strong>Moderator</strong> or <strong>Admin</strong> role assigned
+      </p>
+      <p style="font-size: 13px; color: #999; margin-bottom: 0;">
+        Don't have access? Contact the server administrator to request moderator permissions.
+      </p>
+    </div>
+    
     <!-- Login Section -->
     <div class="login-section">
-      <h2>🔐 Quick Access</h2>
+      <h2>🔐 Authentication Required</h2>
+      <p>Login with Discord to access the control panels</p>
       
-      <div class="login-tabs">
-        <button class="login-tab active" onclick="switchTab('moderator')">Moderator</button>
-        <button class="login-tab" onclick="switchTab('admin')">Admin</button>
-      </div>
-      
-      <!-- Moderator Login -->
-      <div id="moderatorLogin" class="login-content active">
-        <form onsubmit="return false;">
-          <div class="form-group">
-            <label for="modName">Your Name</label>
-            <input 
-              type="text" 
-              id="modName" 
-              placeholder="Enter your name"
-              maxlength="30"
-            />
-          </div>
-          
-          <button type="submit" class="login-btn" onclick="requestModeratorAccess()">
-            Request Moderator Access
-          </button>
-          
-          <div class="success-message" id="modSuccess">
-            Request sent! Waiting for admin approval...
-          </div>
-          <div class="error-message" id="modError">
-            Please enter your name
-          </div>
-        </form>
-      </div>
-      
-      <!-- Admin Login -->
-      <div id="adminLogin" class="login-content">
-        <form onsubmit="return false;">
-          <div class="form-group">
-            <label for="adminPassword">Admin Password</label>
-            <input 
-              type="password" 
-              id="adminPassword" 
-              placeholder="Enter admin password"
-              autocomplete="current-password"
-            />
-          </div>
-          
-          <button type="submit" class="login-btn" onclick="adminDirectLogin()">
-            Login as Admin
-          </button>
-          
-          <div class="error-message" id="adminError">
-            Incorrect password
-          </div>
-        </form>
-      </div>
+      <a href="/auth/discord" class="discord-login-btn">
+        <svg class="discord-icon" viewBox="0 0 71 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g clip-path="url(#clip0)">
+            <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.440769 45.4204 0.525289C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.525289C25.5141 0.443589 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6986 30.1693C53.6986 34.1136 50.9 37.3253 47.3178 37.3253Z" fill="currentColor"/>
+          </g>
+        </svg>
+        Login with Discord
+      </a>
     </div>
     
     <!-- Quick Links -->
     <div class="cards-grid">
       <!-- Moderator Panel -->
-      <a href="/moderator-panel.html" class="card">
+      <div class="card disabled">
         <div class="card-icon">🎮</div>
         <div class="card-title">Moderator Panel</div>
         <div class="card-description">
           Control counters, messages, and celebrations in real-time during streams.
         </div>
-        <span class="card-badge badge-moderator">Requires Approval</span>
-      </a>
+        <span class="card-badge badge-locked">🔒 Login Required</span>
+      </div>
       
       <!-- Admin Panel -->
-      <a href="/admin-panel.html" class="card">
+      <div class="card disabled">
         <div class="card-icon">👑</div>
         <div class="card-title">Admin Panel</div>
         <div class="card-description">
-          Approve moderators, manage access, and monitor all connected users.
+          View connected moderators, monitor activity, and manage permissions.
         </div>
-        <span class="card-badge badge-admin">Admin Only</span>
-      </a>
+        <span class="card-badge badge-locked">🔒 Login Required</span>
+      </div>
       
       <!-- Configuration Panel -->
-      <a href="/config-panel.html" class="card">
+      <div class="card disabled">
         <div class="card-icon">⚙️</div>
         <div class="card-title">Configuration</div>
         <div class="card-description">
           Customize overlay layout, colors, positions, and appearance settings.
         </div>
-        <span class="card-badge badge-admin">Admin Only</span>
-      </a>
+        <span class="card-badge badge-locked">🔒 Login Required</span>
+      </div>
       
       <!-- OBS Overlays Info -->
       <div class="card" onclick="showOBSInfo()">
@@ -457,13 +432,13 @@
       <ul>
         <li><strong>Server Status:</strong> <span id="serverStatus">Checking...</span></li>
         <li><strong>Active Moderators:</strong> <span id="activeMods">0</span></li>
-        <li><strong>Pending Requests:</strong> <span id="pendingRequests">0</span></li>
+        <li><strong>Authentication:</strong> Discord OAuth 2.0</li>
       </ul>
     </div>
     
     <!-- Footer -->
     <div class="footer">
-      <p>Kill Feed System v1.0 | Real-time Stream Overlay Management</p>
+      <p>Kill Feed System v2.0 | Discord OAuth Authentication</p>
     </div>
   </div>
   
@@ -477,7 +452,9 @@
     const statusText = document.getElementById('statusText');
     const serverStatus = document.getElementById('serverStatus');
     const activeMods = document.getElementById('activeMods');
-    const pendingRequests = document.getElementById('pendingRequests');
+    const messageBox = document.getElementById('messageBox');
+    const messageTitle = document.getElementById('messageTitle');
+    const messageText = document.getElementById('messageText');
     
     // Connection status
     socket.on('connect', () => {
@@ -501,100 +478,44 @@
       activeMods.textContent = mods.length;
     });
     
-    socket.on('pendingConnectionsUpdate', (pending) => {
-      pendingRequests.textContent = pending.length;
-    });
+    // Check for error messages in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
     
-    // Tab switching
-    function switchTab(tab) {
-      const tabs = document.querySelectorAll('.login-tab');
-      const contents = document.querySelectorAll('.login-content');
+    if (error) {
+      messageBox.classList.add('error');
       
-      tabs.forEach(t => t.classList.remove('active'));
-      contents.forEach(c => c.classList.remove('active'));
-      
-      if (tab === 'moderator') {
-        tabs[0].classList.add('active');
-        document.getElementById('moderatorLogin').classList.add('active');
-      } else if (tab === 'admin') {
-        tabs[1].classList.add('active');
-        document.getElementById('adminLogin').classList.add('active');
+      switch(error) {
+        case 'no_code':
+          messageTitle.textContent = '❌ Authentication Error';
+          messageText.textContent = 'No authorization code received from Discord. Please try logging in again.';
+          break;
+        case 'token_failed':
+          messageTitle.textContent = '❌ Authentication Failed';
+          messageText.textContent = 'Failed to exchange authorization code. Please try again or contact support.';
+          break;
+        case 'not_in_server':
+          messageTitle.textContent = '❌ Not in Server';
+          messageText.textContent = 'You must be a member of the TwistedXvs Discord server to use this system. Please join the server and try again.';
+          break;
+        case 'insufficient_permissions':
+          messageTitle.textContent = '❌ Insufficient Permissions';
+          messageText.textContent = 'You do not have the required role (Moderator or Admin) to access this system. Please contact the server administrator to request access.';
+          break;
+        case 'auth_failed':
+          messageTitle.textContent = '❌ Authentication Failed';
+          messageText.textContent = 'An error occurred during authentication. Please try again later.';
+          break;
+        default:
+          messageTitle.textContent = '❌ Unknown Error';
+          messageText.textContent = 'An unknown error occurred. Please try again.';
       }
       
-      // Hide all messages
-      document.querySelectorAll('.error-message, .success-message').forEach(msg => {
-        msg.classList.remove('show');
-      });
-    }
-    
-    // Request moderator access
-    function requestModeratorAccess() {
-      const name = document.getElementById('modName').value.trim();
-      const errorEl = document.getElementById('modError');
-      const successEl = document.getElementById('modSuccess');
-      
-      errorEl.classList.remove('show');
-      successEl.classList.remove('show');
-      
-      if (!name) {
-        errorEl.textContent = 'Please enter your name';
-        errorEl.classList.add('show');
-        return;
-      }
-      
-      socket.emit('requestModeratorAccess', name);
-      successEl.classList.add('show');
-      
-      // Redirect to moderator panel after 2 seconds
+      // Clear the error from URL after 10 seconds
       setTimeout(() => {
-        window.location.href = '/moderator-panel.html';
-      }, 2000);
+        window.history.replaceState({}, document.title, '/');
+      }, 10000);
     }
-    
-    // Admin direct login
-    function adminDirectLogin() {
-      const password = document.getElementById('adminPassword').value;
-      const errorEl = document.getElementById('adminError');
-      
-      errorEl.classList.remove('show');
-      
-      if (!password) {
-        errorEl.textContent = 'Please enter the admin password';
-        errorEl.classList.add('show');
-        return;
-      }
-      
-      // Store password in sessionStorage for admin panel
-      sessionStorage.setItem('adminPassword', password);
-      
-      // Attempt authentication
-      socket.emit('authenticateAdmin', password);
-      
-      socket.once('adminAuthenticated', (success) => {
-        if (success) {
-          // Redirect to admin panel
-          window.location.href = '/admin-panel.html';
-        } else {
-          errorEl.textContent = 'Incorrect password';
-          errorEl.classList.add('show');
-          sessionStorage.removeItem('adminPassword');
-          document.getElementById('adminPassword').value = '';
-        }
-      });
-    }
-    
-    // Handle Enter key
-    document.getElementById('modName').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        requestModeratorAccess();
-      }
-    });
-    
-    document.getElementById('adminPassword').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        adminDirectLogin();
-      }
-    });
     
     // Show OBS overlay info
     function showOBSInfo() {
@@ -602,7 +523,7 @@
       
       const message = `OBS Browser Source URLs:
 
-📊 Counters Overlays:
+📊 Counters Overlay:
 ${baseUrl}/obs-overlay.html
 
 📢 Message Overlay:
@@ -614,7 +535,9 @@ ${baseUrl}/obs-celebration.html
 Add these as Browser Sources in OBS:
 - Width: 1920
 - Height: 1080
-- Check "Shutdown source when not visible"`;
+- Check "Shutdown source when not visible"
+
+Note: These overlays are public and do not require authentication.`;
       
       alert(message);
     }

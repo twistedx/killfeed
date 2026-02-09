@@ -1,7 +1,7 @@
 {
   "name": "kill-feed",
   "version": "1.0.0",
-  "description": "OBS Kill Feed with Moderator Control and Admin Authentication",
+  "description": "OBS Kill Feed with Moderator Control and Discord OAuth",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -13,7 +13,8 @@
     "streaming",
     "overlay",
     "websocket",
-    "moderator"
+    "moderator",
+    "discord"
   ],
   "author": "",
   "license": "ISC",
@@ -23,7 +24,10 @@
   },
   "dependencies": {
     "cors": "^2.8.6",
+    "dotenv": "^17.2.4",
     "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "node-fetch": "^2.7.0",
     "socket.io": "^4.8.3"
   }
 }
