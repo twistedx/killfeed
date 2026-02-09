@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kill Feed System - Dashboard</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 1200px;
+    }
+    
+    /* Header */
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 40px;
+    }
+    
+    .header h1 {
+      font-size: 48px;
+      margin-bottom: 10px;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .header p {
+      font-size: 18px;
+      opacity: 0.9;
+    }
+    
+    /* Cards Grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+    }
+    
+    .card-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+    
+    .card-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    
+    .card-description {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+    
+    .card-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    
+    .badge-admin {
+      background: #FFD700;
+      color: #000;
+    }
+    
+    .badge-moderator {
+      background: #667eea;
+      color: white;
+    }
+    
+    .badge-public {
+      background: #4CAF50;
+      color: white;
+    }
+    
+    .badge-obs {
+      background: #FF5722;
+      color: white;
+    }
+    
+    /* Login Section */
+    .login-section {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      margin-bottom: 30px;
+    }
+    
+    .login-section h2 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    
+    .login-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #eee;
+    }
+    
+    .login-tab {
+      padding: 12px 24px;
+      background: none;
+      border: none;
+      font-size: 16px;
+      font-weight: bold;
+      color: #999;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+    
+    .login-tab.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+    
+    .login-content {
+      display: none;
+    }
+    
+    .login-content.active {
+      display: block;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      font-size: 14px;
+      color: #333;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 2px solid #ddd;
+      transition: border-color 0.3s;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    
+    .login-btn:hover {
+      transform: translateY(-2px);
+    }
+    
+    .login-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .error-message {
+      background: rgba(244, 67, 54, 0.1);
+      color: #f44336;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 15px;
+      text-align: center;
+      font-size: 14px;
+      display: none;
+      border: 1px solid rgba(244, 67, 54, 0.3);
+    }
+    
+    .error-message.show {
+      display: block;
+    }
+    
+    .success-message {
+      background: rgba(76, 175, 80, 0.1);
+      color: #4CAF50;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 15px;
+      text-align: center;
+      font-size: 14px;
+      display: none;
+      border: 1px solid rgba(76, 175, 80, 0.3);
+    }
+    
+    .success-message.show {
+      display: block;
+    }
+    
+    /* Info Section */
+    .info-section {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+    
+    .info-section h3 {
+      font-size: 20px;
+      margin-bottom: 15px;
+      color: #333;
+    }
+    
+    .info-section ul {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .info-section li {
+      padding: 8px 0;
+      color: #666;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    
+    .info-section li::before {
+      content: "→ ";
+      color: #667eea;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+    
+    /* Footer */
+    .footer {
+      text-align: center;
+      color: white;
+      margin-top: 30px;
+      opacity: 0.8;
+      font-size: 14px;
+    }
+    
+    /* Connection Status */
+    .connection-status {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+    }
+    
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #4CAF50;
+      animation: pulse 2s infinite;
+    }
+    
+    .status-dot.disconnected {
+      background: #f44336;
+      animation: none;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 32px;
+      }
+      
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .connection-status {
+        position: static;
+        margin-bottom: 20px;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="connection-status">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">Connected</span>
+  </div>
+  
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>🎮 Kill Feed System</h1>
+      <p>Stream Overlay Management Dashboard</p>
+    </div>
+    
+    <!-- Login Section -->
+    <div class="login-section">
+      <h2>🔐 Quick Access</h2>
+      
+      <div class="login-tabs">
+        <button class="login-tab active" onclick="switchTab('moderator')">Moderator</button>
+        <button class="login-tab" onclick="switchTab('admin')">Admin</button>
+      </div>
+      
+      <!-- Moderator Login -->
+      <div id="moderatorLogin" class="login-content active">
+        <form onsubmit="return false;">
+          <div class="form-group">
+            <label for="modName">Your Name</label>
+            <input 
+              type="text" 
+              id="modName" 
+              placeholder="Enter your name"
+              maxlength="30"
+            />
+          </div>
+          
+          <button type="submit" class="login-btn" onclick="requestModeratorAccess()">
+            Request Moderator Access
+          </button>
+          
+          <div class="success-message" id="modSuccess">
+            Request sent! Waiting for admin approval...
+          </div>
+          <div class="error-message" id="modError">
+            Please enter your name
+          </div>
+        </form>
+      </div>
+      
+      <!-- Admin Login -->
+      <div id="adminLogin" class="login-content">
+        <form onsubmit="return false;">
+          <div class="form-group">
+            <label for="adminPassword">Admin Password</label>
+            <input 
+              type="password" 
+              id="adminPassword" 
+              placeholder="Enter admin password"
+              autocomplete="current-password"
+            />
+          </div>
+          
+          <button type="submit" class="login-btn" onclick="adminDirectLogin()">
+            Login as Admin
+          </button>
+          
+          <div class="error-message" id="adminError">
+            Incorrect password
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Quick Links -->
+    <div class="cards-grid">
+      <!-- Moderator Panel -->
+      <a href="/moderator-panel.html" class="card">
+        <div class="card-icon">🎮</div>
+        <div class="card-title">Moderator Panel</div>
+        <div class="card-description">
+          Control counters, messages, and celebrations in real-time during streams.
+        </div>
+        <span class="card-badge badge-moderator">Requires Approval</span>
+      </a>
+      
+      <!-- Admin Panel -->
+      <a href="/admin-panel.html" class="card">
+        <div class="card-icon">👑</div>
+        <div class="card-title">Admin Panel</div>
+        <div class="card-description">
+          Approve moderators, manage access, and monitor all connected users.
+        </div>
+        <span class="card-badge badge-admin">Admin Only</span>
+      </a>
+      
+      <!-- Configuration Panel -->
+      <a href="/config-panel.html" class="card">
+        <div class="card-icon">⚙️</div>
+        <div class="card-title">Configuration</div>
+        <div class="card-description">
+          Customize overlay layout, colors, positions, and appearance settings.
+        </div>
+        <span class="card-badge badge-admin">Admin Only</span>
+      </a>
+      
+      <!-- OBS Overlays Info -->
+      <div class="card" onclick="showOBSInfo()">
+        <div class="card-icon">📺</div>
+        <div class="card-title">OBS Overlays</div>
+        <div class="card-description">
+          View URLs for adding browser sources to OBS Studio.
+        </div>
+        <span class="card-badge badge-obs">For OBS</span>
+      </div>
+    </div>
+    
+    <!-- Info Section -->
+    <div class="info-section">
+      <h3>📋 System Information</h3>
+      <ul>
+        <li><strong>Server Status:</strong> <span id="serverStatus">Checking...</span></li>
+        <li><strong>Active Moderators:</strong> <span id="activeMods">0</span></li>
+        <li><strong>Pending Requests:</strong> <span id="pendingRequests">0</span></li>
+      </ul>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+      <p>Kill Feed System v1.0 | Real-time Stream Overlay Management</p>
+    </div>
+  </div>
+  
+  <!-- Load Socket.IO from CDN -->
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+  
+  <script>
+    const socket = io('https://killfeed-r756.onrender.com');
+    
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const serverStatus = document.getElementById('serverStatus');
+    const activeMods = document.getElementById('activeMods');
+    const pendingRequests = document.getElementById('pendingRequests');
+    
+    // Connection status
+    socket.on('connect', () => {
+      console.log('Connected to server');
+      statusDot.classList.remove('disconnected');
+      statusText.textContent = 'Connected';
+      serverStatus.textContent = 'Online';
+      serverStatus.style.color = '#4CAF50';
+    });
+    
+    socket.on('disconnect', () => {
+      console.log('Disconnected from server');
+      statusDot.classList.add('disconnected');
+      statusText.textContent = 'Disconnected';
+      serverStatus.textContent = 'Offline';
+      serverStatus.style.color = '#f44336';
+    });
+    
+    // Update stats when received
+    socket.on('approvedModeratorsUpdate', (mods) => {
+      activeMods.textContent = mods.length;
+    });
+    
+    socket.on('pendingConnectionsUpdate', (pending) => {
+      pendingRequests.textContent = pending.length;
+    });
+    
+    // Tab switching
+    function switchTab(tab) {
+      const tabs = document.querySelectorAll('.login-tab');
+      const contents = document.querySelectorAll('.login-content');
+      
+      tabs.forEach(t => t.classList.remove('active'));
+      contents.forEach(c => c.classList.remove('active'));
+      
+      if (tab === 'moderator') {
+        tabs[0].classList.add('active');
+        document.getElementById('moderatorLogin').classList.add('active');
+      } else if (tab === 'admin') {
+        tabs[1].classList.add('active');
+        document.getElementById('adminLogin').classList.add('active');
+      }
+      
+      // Hide all messages
+      document.querySelectorAll('.error-message, .success-message').forEach(msg => {
+        msg.classList.remove('show');
+      });
+    }
+    
+    // Request moderator access
+    function requestModeratorAccess() {
+      const name = document.getElementById('modName').value.trim();
+      const errorEl = document.getElementById('modError');
+      const successEl = document.getElementById('modSuccess');
+      
+      errorEl.classList.remove('show');
+      successEl.classList.remove('show');
+      
+      if (!name) {
+        errorEl.textContent = 'Please enter your name';
+        errorEl.classList.add('show');
+        return;
+      }
+      
+      socket.emit('requestModeratorAccess', name);
+      successEl.classList.add('show');
+      
+      // Redirect to moderator panel after 2 seconds
+      setTimeout(() => {
+        window.location.href = '/moderator-panel.html';
+      }, 2000);
+    }
+    
+    // Admin direct login
+    function adminDirectLogin() {
+      const password = document.getElementById('adminPassword').value;
+      const errorEl = document.getElementById('adminError');
+      
+      errorEl.classList.remove('show');
+      
+      if (!password) {
+        errorEl.textContent = 'Please enter the admin password';
+        errorEl.classList.add('show');
+        return;
+      }
+      
+      // Store password in sessionStorage for admin panel
+      sessionStorage.setItem('adminPassword', password);
+      
+      // Attempt authentication
+      socket.emit('authenticateAdmin', password);
+      
+      socket.once('adminAuthenticated', (success) => {
+        if (success) {
+          // Redirect to admin panel
+          window.location.href = '/admin-panel.html';
+        } else {
+          errorEl.textContent = 'Incorrect password';
+          errorEl.classList.add('show');
+          sessionStorage.removeItem('adminPassword');
+          document.getElementById('adminPassword').value = '';
+        }
+      });
+    }
+    
+    // Handle Enter key
+    document.getElementById('modName').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        requestModeratorAccess();
+      }
+    });
+    
+    document.getElementById('adminPassword').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        adminDirectLogin();
+      }
+    });
+    
+    // Show OBS overlay info
+    function showOBSInfo() {
+      const baseUrl = 'https://killfeed-r756.onrender.com';
+      
+      const message = `OBS Browser Source URLs:
+
+📊 Counters Overlays:
+${baseUrl}/obs-overlay.html
+
+📢 Message Overlay:
+${baseUrl}/obs-message.html
+
+🎉 Celebration Overlay:
+${baseUrl}/obs-celebration.html
+
+Add these as Browser Sources in OBS:
+- Width: 1920
+- Height: 1080
+- Check "Shutdown source when not visible"`;
+      
+      alert(message);
+    }
+  </script>
+</body>
+</html>
