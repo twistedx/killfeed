@@ -57,7 +57,7 @@
     }
     
     #celebrationText.luck {
-      color: #FFA500;
+      color: #00C853;
     }
     
     @keyframes textPulse {
@@ -74,7 +74,37 @@
       }
     }
     
-    /* Fireworks Canvas */
+    /* Emoji Container */
+    #emojiContainer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      overflow: hidden;
+    }
+    
+    /* Individual Emoji */
+    .emoji {
+      position: absolute;
+      font-size: 48px;
+      animation: emojiFloat 3s ease-out forwards;
+      pointer-events: none;
+    }
+    
+    @keyframes emojiFloat {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-800px) rotate(360deg);
+        opacity: 0;
+      }
+    }
+    
+    /* Fireworks Canvas (only for HURRAH) */
     #fireworksCanvas {
       position: absolute;
       top: 0;
@@ -103,6 +133,7 @@
 <body>
   <div id="celebrationContainer">
     <canvas id="fireworksCanvas"></canvas>
+    <div id="emojiContainer"></div>
     <div id="celebrationText">HURRAH!</div>
   </div>
   
@@ -116,6 +147,7 @@
     const socket = io('https://killfeed-r756.onrender.com');
     const containerEl = document.getElementById('celebrationContainer');
     const textEl = document.getElementById('celebrationText');
+    const emojiContainerEl = document.getElementById('emojiContainer');
     const statusEl = document.getElementById('status');
     const canvas = document.getElementById('fireworksCanvas');
     const ctx = canvas.getContext('2d');
@@ -146,6 +178,7 @@
       hurrah: {
         text: 'HURRAH!',
         className: 'success',
+        useFireworks: true,
         colors: ['#FFD700', '#FFC400', '#FFEA00', '#76FF03', '#00E676', '#00E5FF'],
         particleCount: 50,
         launches: 15
@@ -153,27 +186,27 @@
       failure: {
         text: 'FAILURE!',
         className: 'failure',
-        colors: ['#FF1744', '#F50057', '#D500F9', '#FF3D00', '#FF5722'],
-        particleCount: 40,
-        launches: 10
+        useEmojis: true,
+        emojis: ['💀', '☠️', '👻'],
+        emojiCount: 50
       },
       rats: {
         text: 'DAMN RATS!',
         className: 'rats',
-        colors: ['#8B4513', '#A0522D', '#654321', '#D2691E', '#CD853F'],
-        particleCount: 35,
-        launches: 12
+        useEmojis: true,
+        emojis: ['🐀', '🐁'],
+        emojiCount: 60
       },
       luck: {
         text: 'BETTER LUCK\nNEXT TIME!',
         className: 'luck',
-        colors: ['#FFA500', '#FF8C00', '#FF7F50', '#FF6347', '#FFD700'],
-        particleCount: 30,
-        launches: 8
+        useEmojis: true,
+        emojis: ['🍀', '☘️'],
+        emojiCount: 40
       }
     };
     
-    // Fireworks particles
+    // ===== FIREWORKS CODE (for HURRAH only) =====
     let particles = [];
     let animationId = null;
     
@@ -250,7 +283,51 @@
       }
     }
     
-    // Handle celebration trigger
+    // ===== EMOJI CODE (for FAILURE, RATS, LUCK) =====
+    function createEmoji(emoji) {
+      const emojiEl = document.createElement('div');
+      emojiEl.className = 'emoji';
+      emojiEl.textContent = emoji;
+      
+      // Random horizontal position
+      emojiEl.style.left = Math.random() * 100 + '%';
+      
+      // Start from bottom
+      emojiEl.style.bottom = '-50px';
+      
+      // Random animation duration (2-4 seconds)
+      const duration = 2 + Math.random() * 2;
+      emojiEl.style.animationDuration = duration + 's';
+      
+      // Random delay for staggered effect
+      const delay = Math.random() * 2;
+      emojiEl.style.animationDelay = delay + 's';
+      
+      // Random size variation
+      const size = 40 + Math.random() * 40;
+      emojiEl.style.fontSize = size + 'px';
+      
+      emojiContainerEl.appendChild(emojiEl);
+      
+      // Remove after animation completes
+      setTimeout(() => {
+        emojiEl.remove();
+      }, (duration + delay) * 1000);
+    }
+    
+    function launchEmojis(config) {
+      const count = config.emojiCount;
+      const duration = 3000; // 3 seconds to spawn all emojis
+      
+      for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+          const emoji = config.emojis[Math.floor(Math.random() * config.emojis.length)];
+          createEmoji(emoji);
+        }, (duration / count) * i);
+      }
+    }
+    
+    // ===== MAIN CELEBRATION TRIGGER =====
     socket.on('triggerCelebration', (type = 'hurrah') => {
       console.log('Celebration triggered:', type);
       
@@ -263,15 +340,20 @@
       // Show container
       containerEl.classList.add('active');
       
-      // Clear any existing animation
+      // Clear previous animations
       if (animationId) {
         cancelAnimationFrame(animationId);
       }
       particles = [];
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      emojiContainerEl.innerHTML = '';
       
-      // Launch fireworks
-      launchFireworks(config);
+      // Launch appropriate effect
+      if (config.useFireworks) {
+        launchFireworks(config);
+      } else if (config.useEmojis) {
+        launchEmojis(config);
+      }
       
       // Hide after 5 seconds
       setTimeout(() => {
@@ -281,6 +363,7 @@
           cancelAnimationFrame(animationId);
         }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        emojiContainerEl.innerHTML = '';
       }, 5000);
     });
   </script>
