@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #1a1a1a;
+      color: white;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    
+    #connectionStatus {
+      text-align: center;
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    
+    .connected {
+      background: rgba(76, 175, 80, 0.2);
+      color: #4CAF50;
+    }
+    
+    .disconnected {
+      background: rgba(244, 67, 54, 0.2);
+      color: #F44336;
+    }
+    
+    /* Counter Controls */
+    #counterControls {
+      background: #2a2a2a;
+      padding: 30px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    
+    .counter-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px;
+      margin: 15px 0;
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      border-left: 5px solid;
+    }
+    
+    .counter-section.kills { border-color: #4CAF50; }
+    .counter-section.extracted { border-color: #FFC107; }
+    .counter-section.kia { border-color: #F44336; }
+    
+    .counter-info {
+      flex: 1;
+    }
+    
+    .counter-name {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    
+    .counter-display {
+      font-size: 36px;
+      font-weight: bold;
+    }
+    
+    .counter-section.kills .counter-display { color: #4CAF50; }
+    .counter-section.extracted .counter-display { color: #FFC107; }
+    .counter-section.kia .counter-display { color: #F44336; }
+    
+    .counter-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .counter-btn {
+      width: 60px;
+      height: 60px;
+      font-size: 28px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .counter-btn:hover {
+      transform: scale(1.1);
+    }
+    
+    .counter-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .counter-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .counter-btn.minus {
+      background: #f44336;
+      color: white;
+    }
+    
+    .counter-btn.plus {
+      background: #4CAF50;
+      color: white;
+    }
+    
+    .reset-all-btn {
+      width: 100%;
+      padding: 15px;
+      background: #FF5722;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: opacity 0.2s;
+    }
+    
+    .reset-all-btn:hover {
+      opacity: 0.9;
+    }
+    
+    .reset-all-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎮 Counter Control Panel</h1>
+  
+  <div id="connectionStatus" class="disconnected">
+    Connecting to server...
+  </div>
+  
+  <!-- Counter Controls -->
+  <div id="counterControls">
+    <div class="counter-section kills">
+      <div class="counter-info">
+        <div class="counter-name">💀 Kills</div>
+        <div class="counter-display" id="killsDisplay">0</div>
+      </div>
+      <div class="counter-buttons">
+        <button class="counter-btn minus" onclick="decrementCounter('kills')" id="killsMinus">−</button>
+        <button class="counter-btn plus" onclick="incrementCounter('kills')" id="killsPlus">+</button>
+      </div>
+    </div>
+    
+    <div class="counter-section extracted">
+      <div class="counter-info">
+        <div class="counter-name">✅ Extracted</div>
+        <div class="counter-display" id="extractedDisplay">0</div>
+      </div>
+      <div class="counter-buttons">
+        <button class="counter-btn minus" onclick="decrementCounter('extracted')" id="extractedMinus">−</button>
+        <button class="counter-btn plus" onclick="incrementCounter('extracted')" id="extractedPlus">+</button>
+      </div>
+    </div>
+    
+    <div class="counter-section kia">
+      <div class="counter-info">
+        <div class="counter-name">☠️ KIA</div>
+        <div class="counter-display" id="kiaDisplay">0</div>
+      </div>
+      <div class="counter-buttons">
+        <button class="counter-btn minus" onclick="decrementCounter('kia')" id="kiaMinus">−</button>
+        <button class="counter-btn plus" onclick="incrementCounter('kia')" id="kiaPlus">+</button>
+      </div>
+    </div>
+    
+    <button class="reset-all-btn" onclick="resetAllCounters()" id="resetBtn">Reset All Counters</button>
+  </div>
+  
+  <!-- Load Socket.IO from CDN -->
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+  
+  <script>
+    const socket = io('http://localhost:3000');
+    const statusEl = document.getElementById('connectionStatus');
+    
+    // Counter display elements
+    const killsDisplayEl = document.getElementById('killsDisplay');
+    const extractedDisplayEl = document.getElementById('extractedDisplay');
+    const kiaDisplayEl = document.getElementById('kiaDisplay');
+    
+    // Get all buttons
+    const allButtons = document.querySelectorAll('button');
+    
+    // Connection status
+    socket.on('connect', () => {
+      console.log('Connected to server');
+      statusEl.textContent = '✅ Connected to server';
+      statusEl.className = 'connected';
+      allButtons.forEach(btn => btn.disabled = false);
+    });
+    
+    socket.on('disconnect', () => {
+      console.log('Disconnected from server');
+      statusEl.textContent = '❌ Disconnected from server';
+      statusEl.className = 'disconnected';
+      allButtons.forEach(btn => btn.disabled = true);
+    });
+    
+    // Update counter displays
+    socket.on('countersUpdate', (counters) => {
+      console.log('Counters updated:', counters);
+      killsDisplayEl.textContent = counters.kills || 0;
+      extractedDisplayEl.textContent = counters.extracted || 0;
+      kiaDisplayEl.textContent = counters.kia || 0;
+    });
+    
+    // Counter control functions
+    function incrementCounter(type) {
+      socket.emit('incrementCounter', type);
+    }
+    
+    function decrementCounter(type) {
+      socket.emit('decrementCounter', type);
+    }
+    
+    function resetAllCounters() {
+      if (confirm('Reset all counters to 0?')) {
+        socket.emit('resetCounters');
+      }
+    }
+  </script>
+</body>
+</html>

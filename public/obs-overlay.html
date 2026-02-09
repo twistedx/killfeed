@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      margin: 0;
+      background: transparent;
+      font-family: 'Arial Black', sans-serif;
+      overflow: hidden;
+    }
+    
+    /* Counter Bar at Top */
+    #counterBar {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 15px;
+    }
+    
+    .counter {
+      background: rgba(0, 0, 0, 0.85);
+      padding: 20px 30px;
+      border-radius: 8px;
+      text-align: center;
+      min-width: 140px;
+      border: 3px solid;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+    
+    .counter.kills {
+      border-color: #4CAF50;
+    }
+    
+    .counter.extracted {
+      border-color: #FFC107;
+    }
+    
+    .counter.kia {
+      border-color: #F44336;
+    }
+    
+    .counter-label {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      opacity: 0.9;
+    }
+    
+    .counter.kills .counter-label {
+      color: #4CAF50;
+    }
+    
+    .counter.extracted .counter-label {
+      color: #FFC107;
+    }
+    
+    .counter.kia .counter-label {
+      color: #F44336;
+    }
+    
+    .counter-value {
+      font-size: 48px;
+      font-weight: bold;
+      color: white;
+      line-height: 1;
+    }
+    
+    #status {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      padding: 5px 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      font-size: 12px;
+      border-radius: 3px;
+    }
+    
+    .connected { color: #4CAF50; }
+    .disconnected { color: #F44336; }
+  </style>
+</head>
+<body>
+  <!-- Counter Bar -->
+  <div id="counterBar">
+    <div class="counter kills">
+      <div class="counter-label">Kills</div>
+      <div class="counter-value" id="killsCounter">0</div>
+    </div>
+    <div class="counter extracted">
+      <div class="counter-label">Extracted</div>
+      <div class="counter-value" id="extractedCounter">0</div>
+    </div>
+    <div class="counter kia">
+      <div class="counter-label">KIA</div>
+      <div class="counter-value" id="kiaCounter">0</div>
+    </div>
+  </div>
+  
+  <div id="status">Connecting...</div>
+  
+  <!-- Load Socket.IO from CDN -->
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+  
+  <script>
+    // Connect to server
+    const socket = io('http://localhost:3000');
+    const statusEl = document.getElementById('status');
+    
+    // Counter elements
+    const killsCounterEl = document.getElementById('killsCounter');
+    const extractedCounterEl = document.getElementById('extractedCounter');
+    const kiaCounterEl = document.getElementById('kiaCounter');
+    
+    socket.on('connect', () => {
+      console.log('Connected to server');
+      statusEl.innerHTML = '<span class="connected">● Connected</span>';
+      setTimeout(() => statusEl.style.display = 'none', 3000);
+    });
+    
+    socket.on('disconnect', () => {
+      console.log('Disconnected from server');
+      statusEl.style.display = 'block';
+      statusEl.innerHTML = '<span class="disconnected">● Disconnected</span>';
+    });
+    
+    // Update counters
+    socket.on('countersUpdate', (counters) => {
+      console.log('Counters updated:', counters);
+      killsCounterEl.textContent = counters.kills || 0;
+      extractedCounterEl.textContent = counters.extracted || 0;
+      kiaCounterEl.textContent = counters.kia || 0;
+    });
+  </script>
+</body>
+</html>
