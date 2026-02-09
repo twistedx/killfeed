@@ -20,8 +20,14 @@ const io = new Server(server, {
   }
 });
 
-// Serve static files from 'public' directory
+// Middleware
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
+
+// Redirect root to index
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -45,13 +51,49 @@ let message = {
   visible: false
 };
 
+// Configuration storage
+let overlayConfigs = {
+  default: {
+    counters: {
+      enabled: true,
+      position: { x: 20, y: 20 },
+      layout: 'horizontal', // horizontal, vertical
+      size: 'medium', // small, medium, large
+      style: {
+        kills: { color: '#4CAF50', borderColor: '#4CAF50' },
+        extracted: { color: '#FFC107', borderColor: '#FFC107' },
+        kia: { color: '#F44336', borderColor: '#F44336' }
+      }
+    },
+    message: {
+      enabled: true,
+      position: 'bottom', // top, bottom, custom
+      customPosition: { x: 0, y: 100 },
+      fontSize: 32,
+      color: '#FFC107',
+      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+      borderColor: '#FFC107',
+      scrollSpeed: 15 // seconds for full scroll
+    },
+    celebration: {
+      enabled: true,
+      duration: 5000, // milliseconds
+      textSize: 120,
+      effectIntensity: 'normal' // low, normal, high
+    }
+  }
+};
+
 // Connection management
-let pendingConnections = []; // Moderators waiting for approval
-let approvedModerators = {}; // { socketId: { name, socketId, connectedAt } }
-let adminSockets = new Set(); // Track multiple admin connections
+let pendingConnections = [];
+let approvedModerators = {};
+let adminSockets = new Set();
 
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
+  
+  // Send current config to new connections
+  socket.emit('configUpdate', overlayConfigs.default);
   
   // Admin authentication
   socket.on('authenticateAdmin', (password) => {
@@ -61,21 +103,50 @@ io.on('connection', (socket) => {
       adminSockets.add(socket.id);
       console.log('Admin authenticated:', socket.id);
       
-      // Send success and current state
       socket.emit('adminAuthenticated', true);
       socket.emit('countersUpdate', counters);
       socket.emit('messageUpdate', message);
       socket.emit('pendingConnectionsUpdate', pendingConnections);
       socket.emit('approvedModeratorsUpdate', Object.values(approvedModerators));
+      socket.emit('configUpdate', overlayConfigs.default);
     } else {
       console.log('Admin authentication failed:', socket.id);
       socket.emit('adminAuthenticated', false);
     }
   });
   
-  // Check if socket is authenticated admin
+  // Update configuration (only admins)
+  socket.on('updateConfig', (newConfig) => {
+    if (!isAdmin(socket.id)) {
+      console.log('Unauthorized config update attempt:', socket.id);
+      return;
+    }
+    
+    console.log('Configuration updated by admin:', socket.id);
+    overlayConfigs.default = { ...overlayConfigs.default, ...newConfig };
+    
+    // Broadcast to all clients
+    io.emit('configUpdate', overlayConfigs.default);
+  });
+  
+  // Reset configuration to defaults (only admins)
+  socket.on('resetConfig', () => {
+    if (!isAdmin(socket.id)) {
+      console.log('Unauthorized config reset attempt:', socket.id);
+      return;
+    }
+    
+    console.log('Configuration reset by admin:', socket.id);
+    overlayConfigs.default = getDefaultConfig();
+    io.emit('configUpdate', overlayConfigs.default);
+  });
+  
   const isAdmin = (socketId) => {
     return adminSockets.has(socketId);
+  };
+  
+  const isApproved = (socketId) => {
+    return approvedModerators.hasOwnProperty(socketId);
   };
   
   // Moderator requests access
@@ -90,13 +161,11 @@ io.on('connection', (socket) => {
     
     pendingConnections.push(request);
     
-    // Notify all admins
     adminSockets.forEach(adminId => {
       io.to(adminId).emit('pendingConnectionsUpdate', pendingConnections);
     });
   });
   
-  // Admin approves moderator (requires authentication)
   socket.on('approveModerator', (socketId) => {
     if (!isAdmin(socket.id)) {
       console.log('Unauthorized approve attempt:', socket.id);
@@ -107,24 +176,18 @@ io.on('connection', (socket) => {
     
     const request = pendingConnections.find(r => r.socketId === socketId);
     if (request) {
-      // Remove from pending
       pendingConnections = pendingConnections.filter(r => r.socketId !== socketId);
       
-      // Add to approved
       approvedModerators[socketId] = {
         socketId: request.socketId,
         name: request.name,
         connectedAt: new Date().toISOString()
       };
       
-      // Notify the moderator they're approved
       io.to(socketId).emit('moderatorApproved');
-      
-      // Send current state to the newly approved moderator
       io.to(socketId).emit('countersUpdate', counters);
       io.to(socketId).emit('messageUpdate', message);
       
-      // Notify all admins
       adminSockets.forEach(adminId => {
         io.to(adminId).emit('pendingConnectionsUpdate', pendingConnections);
         io.to(adminId).emit('approvedModeratorsUpdate', Object.values(approvedModerators));
@@ -132,7 +195,6 @@ io.on('connection', (socket) => {
     }
   });
   
-  // Admin denies moderator (requires authentication)
   socket.on('denyModerator', (socketId) => {
     if (!isAdmin(socket.id)) {
       console.log('Unauthorized deny attempt:', socket.id);
@@ -140,20 +202,14 @@ io.on('connection', (socket) => {
     }
     
     console.log('Denying moderator:', socketId);
-    
-    // Remove from pending
     pendingConnections = pendingConnections.filter(r => r.socketId !== socketId);
-    
-    // Notify the moderator they're denied
     io.to(socketId).emit('moderatorDenied');
     
-    // Notify all admins
     adminSockets.forEach(adminId => {
       io.to(adminId).emit('pendingConnectionsUpdate', pendingConnections);
     });
   });
   
-  // Admin kicks moderator (requires authentication)
   socket.on('kickModerator', (socketId) => {
     if (!isAdmin(socket.id)) {
       console.log('Unauthorized kick attempt:', socket.id);
@@ -161,28 +217,18 @@ io.on('connection', (socket) => {
     }
     
     console.log('Kicking moderator:', socketId);
-    
     delete approvedModerators[socketId];
-    
-    // Notify the moderator they're kicked
     io.to(socketId).emit('moderatorKicked');
     
-    // Notify all admins
     adminSockets.forEach(adminId => {
       io.to(adminId).emit('approvedModeratorsUpdate', Object.values(approvedModerators));
     });
   });
   
-  // Check if moderator is approved (helper function)
-  const isApproved = (socketId) => {
-    return approvedModerators.hasOwnProperty(socketId);
-  };
-  
-  // Send current state to overlay connections (no auth needed for overlays)
+  // Send current state to overlay connections
   socket.emit('countersUpdate', counters);
   socket.emit('messageUpdate', message);
   
-  // Increment counter (only approved moderators)
   socket.on('incrementCounter', (type) => {
     if (!isApproved(socket.id)) {
       console.log('Unauthorized counter increment attempt:', socket.id);
@@ -196,7 +242,6 @@ io.on('connection', (socket) => {
     }
   });
   
-  // Decrement counter (only approved moderators)
   socket.on('decrementCounter', (type) => {
     if (!isApproved(socket.id)) {
       console.log('Unauthorized counter decrement attempt:', socket.id);
@@ -210,7 +255,6 @@ io.on('connection', (socket) => {
     }
   });
   
-  // Reset counters (only approved moderators)
   socket.on('resetCounters', () => {
     if (!isApproved(socket.id)) {
       console.log('Unauthorized counter reset attempt:', socket.id);
@@ -222,7 +266,6 @@ io.on('connection', (socket) => {
     io.emit('countersUpdate', counters);
   });
   
-  // Update message (only approved moderators)
   socket.on('updateMessage', (newMessage) => {
     if (!isApproved(socket.id)) {
       console.log('Unauthorized message update attempt:', socket.id);
@@ -234,7 +277,6 @@ io.on('connection', (socket) => {
     io.emit('messageUpdate', message);
   });
   
-  // Show message (only approved moderators)
   socket.on('showMessage', () => {
     if (!isApproved(socket.id)) return;
     console.log(`Message shown by ${approvedModerators[socket.id].name}`);
@@ -242,7 +284,6 @@ io.on('connection', (socket) => {
     io.emit('messageUpdate', message);
   });
   
-  // Hide message (only approved moderators)
   socket.on('hideMessage', () => {
     if (!isApproved(socket.id)) return;
     console.log(`Message hidden by ${approvedModerators[socket.id].name}`);
@@ -250,7 +291,6 @@ io.on('connection', (socket) => {
     io.emit('messageUpdate', message);
   });
   
-  // Trigger celebration (only approved moderators)
   socket.on('triggerCelebration', (type = 'hurrah') => {
     if (!isApproved(socket.id)) {
       console.log('Unauthorized celebration attempt:', socket.id);
@@ -264,18 +304,15 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
     
-    // Remove from approved if disconnected
     if (approvedModerators[socket.id]) {
       console.log('Approved moderator disconnected:', approvedModerators[socket.id].name);
       delete approvedModerators[socket.id];
       
-      // Notify all admins
       adminSockets.forEach(adminId => {
         io.to(adminId).emit('approvedModeratorsUpdate', Object.values(approvedModerators));
       });
     }
     
-    // Remove from pending if disconnected
     const wasPending = pendingConnections.some(r => r.socketId === socket.id);
     pendingConnections = pendingConnections.filter(r => r.socketId !== socket.id);
     if (wasPending) {
@@ -284,7 +321,6 @@ io.on('connection', (socket) => {
       });
     }
     
-    // Remove from admin sockets if they disconnect
     if (adminSockets.has(socket.id)) {
       adminSockets.delete(socket.id);
       console.log('Admin disconnected:', socket.id);
@@ -292,14 +328,48 @@ io.on('connection', (socket) => {
   });
 });
 
+function getDefaultConfig() {
+  return {
+    counters: {
+      enabled: true,
+      position: { x: 20, y: 20 },
+      layout: 'horizontal',
+      size: 'medium',
+      style: {
+        kills: { color: '#4CAF50', borderColor: '#4CAF50' },
+        extracted: { color: '#FFC107', borderColor: '#FFC107' },
+        kia: { color: '#F44336', borderColor: '#F44336' }
+      }
+    },
+    message: {
+      enabled: true,
+      position: 'bottom',
+      customPosition: { x: 0, y: 100 },
+      fontSize: 32,
+      color: '#FFC107',
+      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+      borderColor: '#FFC107',
+      scrollSpeed: 15
+    },
+    celebration: {
+      enabled: true,
+      duration: 5000,
+      textSize: 120,
+      effectIntensity: 'normal'
+    }
+  };
+}
+
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`🔐 Admin password: ${ADMIN_PASSWORD === 'changeme123' ? '⚠️  USING DEFAULT PASSWORD!' : '✓ Custom password set'}`);
+  console.log(`🏠 Homepage: ${BASE_URL}/`);
   console.log(`📺 OBS Overlay: ${BASE_URL}/obs-overlay.html`);
   console.log(`📺 OBS Message: ${BASE_URL}/obs-message.html`);
   console.log(`📺 OBS Celebration: ${BASE_URL}/obs-celebration.html`);
   console.log(`🎮 Moderator Panel: ${BASE_URL}/moderator-panel.html`);
   console.log(`👑 Admin Panel: ${BASE_URL}/admin-panel.html`);
+  console.log(`⚙️  Config Panel: ${BASE_URL}/config-panel.html`);
 });
