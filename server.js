@@ -22,7 +22,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', counters, message });
+  res.json({ 
+    status: 'ok', 
+    counters, 
+    message,
+    pendingConnections: pendingConnections.length,
+    approvedModerators: Object.keys(approvedModerators).length
+  });
 });
 
 let counters = {
@@ -93,6 +99,10 @@ io.on('connection', (socket) => {
       // Notify the moderator they're approved
       io.to(socketId).emit('moderatorApproved');
       
+      // Send current state to the newly approved moderator
+      io.to(socketId).emit('countersUpdate', counters);
+      io.to(socketId).emit('messageUpdate', message);
+      
       // Notify admin of updates
       if (adminSocketId) {
         io.to(adminSocketId).emit('pendingConnectionsUpdate', pendingConnections);
@@ -137,7 +147,7 @@ io.on('connection', (socket) => {
     return approvedModerators.hasOwnProperty(socketId);
   };
   
-  // Send current state to overlay connections
+  // Send current state to overlay connections (no auth needed for overlays)
   socket.emit('countersUpdate', counters);
   socket.emit('messageUpdate', message);
   
@@ -210,14 +220,14 @@ io.on('connection', (socket) => {
   });
   
   // Trigger celebration (only approved moderators)
-  socket.on('triggerCelebration', () => {
+  socket.on('triggerCelebration', (type = 'hurrah') => {
     if (!isApproved(socket.id)) {
       console.log('Unauthorized celebration attempt:', socket.id);
       return;
     }
     
-    console.log(`Celebration triggered by ${approvedModerators[socket.id].name}!`);
-    io.emit('triggerCelebration');
+    console.log(`Celebration triggered by ${approvedModerators[socket.id].name}: ${type}`);
+    io.emit('triggerCelebration', type);
   });
   
   socket.on('disconnect', () => {
@@ -235,6 +245,9 @@ io.on('connection', (socket) => {
     
     // Remove from pending if disconnected
     pendingConnections = pendingConnections.filter(r => r.socketId !== socket.id);
+    if (adminSocketId) {
+      io.to(adminSocketId).emit('pendingConnectionsUpdate', pendingConnections);
+    }
     
     // Clear admin if they disconnect
     if (socket.id === adminSocketId) {

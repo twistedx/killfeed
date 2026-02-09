@@ -26,22 +26,41 @@
       display: flex;
     }
     
-    /* Hurrah Text */
-    #hurrahText {
+    /* Celebration Text */
+    #celebrationText {
       font-size: 120px;
       font-weight: bold;
-      color: #FFD700;
       text-shadow: 
         0 0 20px rgba(255, 215, 0, 0.8),
         0 0 40px rgba(255, 215, 0, 0.6),
         0 0 60px rgba(255, 215, 0, 0.4),
         4px 4px 8px rgba(0, 0, 0, 0.8);
-      animation: hurrahPulse 1s ease-in-out;
+      animation: textPulse 1s ease-in-out;
       z-index: 100;
       position: relative;
+      text-align: center;
+      max-width: 90%;
+      line-height: 1.2;
     }
     
-    @keyframes hurrahPulse {
+    /* Different text colors for different moods */
+    #celebrationText.success {
+      color: #FFD700;
+    }
+    
+    #celebrationText.failure {
+      color: #FF4444;
+    }
+    
+    #celebrationText.rats {
+      color: #8B4513;
+    }
+    
+    #celebrationText.luck {
+      color: #FFA500;
+    }
+    
+    @keyframes textPulse {
       0% {
         transform: scale(0);
         opacity: 0;
@@ -84,7 +103,7 @@
 <body>
   <div id="celebrationContainer">
     <canvas id="fireworksCanvas"></canvas>
-    <div id="hurrahText">HURRAH!</div>
+    <div id="celebrationText">HURRAH!</div>
   </div>
   
   <div id="status">Connecting...</div>
@@ -96,6 +115,7 @@
     // Connect to server
     const socket = io('https://killfeed-r756.onrender.com');
     const containerEl = document.getElementById('celebrationContainer');
+    const textEl = document.getElementById('celebrationText');
     const statusEl = document.getElementById('status');
     const canvas = document.getElementById('fireworksCanvas');
     const ctx = canvas.getContext('2d');
@@ -120,6 +140,38 @@
       statusEl.style.display = 'block';
       statusEl.innerHTML = '<span class="disconnected">● Disconnected</span>';
     });
+    
+    // Celebration types configuration
+    const celebrationTypes = {
+      hurrah: {
+        text: 'HURRAH!',
+        className: 'success',
+        colors: ['#FFD700', '#FFC400', '#FFEA00', '#76FF03', '#00E676', '#00E5FF'],
+        particleCount: 50,
+        launches: 15
+      },
+      failure: {
+        text: 'FAILURE!',
+        className: 'failure',
+        colors: ['#FF1744', '#F50057', '#D500F9', '#FF3D00', '#FF5722'],
+        particleCount: 40,
+        launches: 10
+      },
+      rats: {
+        text: 'DAMN RATS!',
+        className: 'rats',
+        colors: ['#8B4513', '#A0522D', '#654321', '#D2691E', '#CD853F'],
+        particleCount: 35,
+        launches: 12
+      },
+      luck: {
+        text: 'BETTER LUCK\nNEXT TIME!',
+        className: 'luck',
+        colors: ['#FFA500', '#FF8C00', '#FF7F50', '#FF6347', '#FFD700'],
+        particleCount: 30,
+        launches: 8
+      }
+    };
     
     // Fireworks particles
     let particles = [];
@@ -157,15 +209,7 @@
       }
     }
     
-    function createFirework(x, y) {
-      const colors = [
-        '#FF1744', '#F50057', '#D500F9', '#651FFF',
-        '#2979FF', '#00B0FF', '#00E5FF', '#1DE9B6',
-        '#00E676', '#76FF03', '#FFEA00', '#FFC400',
-        '#FF9100', '#FF3D00', '#FFD700', '#FF69B4'
-      ];
-      
-      const particleCount = 50;
+    function createFirework(x, y, colors, particleCount) {
       const color = colors[Math.floor(Math.random() * colors.length)];
       
       for (let i = 0; i < particleCount; i++) {
@@ -189,16 +233,15 @@
       }
     }
     
-    function launchFireworks() {
-      // Launch multiple fireworks over time
-      const launches = 15; // Total fireworks
+    function launchFireworks(config) {
+      const launches = config.launches;
       const duration = 4000; // 4 seconds
       
       for (let i = 0; i < launches; i++) {
         setTimeout(() => {
           const x = Math.random() * canvas.width;
           const y = Math.random() * canvas.height * 0.6; // Upper 60% of screen
-          createFirework(x, y);
+          createFirework(x, y, config.colors, config.particleCount);
           
           if (i === 0) {
             animate();
@@ -208,8 +251,16 @@
     }
     
     // Handle celebration trigger
-    socket.on('triggerCelebration', () => {
-      console.log('Celebration triggered!');
+    socket.on('triggerCelebration', (type = 'hurrah') => {
+      console.log('Celebration triggered:', type);
+      
+      const config = celebrationTypes[type] || celebrationTypes.hurrah;
+      
+      // Set text and style
+      textEl.textContent = config.text;
+      textEl.className = config.className;
+      
+      // Show container
       containerEl.classList.add('active');
       
       // Clear any existing animation
@@ -220,7 +271,7 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       // Launch fireworks
-      launchFireworks();
+      launchFireworks(config);
       
       // Hide after 5 seconds
       setTimeout(() => {

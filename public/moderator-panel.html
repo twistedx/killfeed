@@ -2,41 +2,57 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Moderator Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moderator Dashboard</title>
   <style>
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
     
     body {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: 50px auto;
-      padding: 20px;
-      background: #1a1a1a;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f0f0f;
       color: white;
+      min-height: 100vh;
     }
     
     /* Login Screen */
     #loginScreen {
       max-width: 400px;
       margin: 100px auto;
+      padding: 40px;
+      background: #1a1a1a;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
       text-align: center;
     }
     
     #loginScreen h1 {
       margin-bottom: 30px;
+      font-size: 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
     
     #loginScreen input {
       width: 100%;
       padding: 15px;
-      font-size: 18px;
+      font-size: 16px;
       border-radius: 8px;
-      border: 2px solid #444;
-      background: #2a2a2a;
+      border: 2px solid #333;
+      background: #0f0f0f;
       color: white;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
+      transition: border-color 0.3s;
+    }
+    
+    #loginScreen input:focus {
+      outline: none;
+      border-color: #667eea;
     }
     
     #loginScreen button {
@@ -44,25 +60,27 @@
       padding: 15px;
       font-size: 18px;
       font-weight: bold;
-      background: #4CAF50;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      transition: transform 0.2s;
     }
     
     #loginScreen button:hover {
-      background: #45a049;
+      transform: translateY(-2px);
     }
     
-    #waitingScreen {
+    #waitingScreen, #deniedScreen {
       display: none;
       max-width: 500px;
       margin: 100px auto;
       text-align: center;
       padding: 40px;
-      background: #2a2a2a;
-      border-radius: 12px;
+      background: #1a1a1a;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
     }
     
     #waitingScreen h2 {
@@ -70,8 +88,8 @@
     }
     
     .spinner {
-      border: 4px solid #444;
-      border-top: 4px solid #FFC107;
+      border: 4px solid #333;
+      border-top: 4px solid #667eea;
       border-radius: 50%;
       width: 50px;
       height: 50px;
@@ -85,13 +103,6 @@
     }
     
     #deniedScreen {
-      display: none;
-      max-width: 500px;
-      margin: 100px auto;
-      text-align: center;
-      padding: 40px;
-      background: #2a2a2a;
-      border-radius: 12px;
       border: 3px solid #f44336;
     }
     
@@ -100,105 +111,153 @@
       margin-bottom: 20px;
     }
     
+    /* Dashboard Layout */
     #controlPanel {
       display: none;
     }
     
-    h1 {
-      text-align: center;
-      margin-bottom: 10px;
+    /* Header */
+    .dashboard-header {
+      background: #1a1a1a;
+      padding: 20px 30px;
+      border-bottom: 2px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
     }
     
-    .moderator-info {
-      text-align: center;
-      padding: 10px;
-      background: rgba(76, 175, 80, 0.2);
-      border-radius: 5px;
-      margin-bottom: 20px;
-      color: #4CAF50;
+    .dashboard-title {
+      font-size: 28px;
       font-weight: bold;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
     
-    h2 {
-      margin-top: 30px;
-      border-bottom: 2px solid #444;
-      padding-bottom: 10px;
-    }
-    
-    #connectionStatus {
-      text-align: center;
-      padding: 10px;
-      margin-bottom: 20px;
-      border-radius: 5px;
-      font-weight: bold;
-    }
-    
-    .connected {
-      background: rgba(76, 175, 80, 0.2);
-      color: #4CAF50;
-    }
-    
-    .disconnected {
-      background: rgba(244, 67, 54, 0.2);
-      color: #F44336;
-    }
-    
-    /* Counter Controls */
-    #counterControls {
-      background: #2a2a2a;
-      padding: 30px;
-      border-radius: 8px;
-      margin-top: 20px;
-    }
-    
-    .counter-section {
+    .moderator-badge {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 20px;
-      margin: 15px 0;
-      background: rgba(0,0,0,0.3);
-      border-radius: 8px;
-      border-left: 5px solid;
+      gap: 10px;
+      background: rgba(102, 126, 234, 0.2);
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 14px;
     }
     
-    .counter-section.kills { border-color: #4CAF50; }
-    .counter-section.extracted { border-color: #FFC107; }
-    .counter-section.kia { border-color: #F44336; }
-    
-    .counter-info {
-      flex: 1;
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #4CAF50;
+      animation: pulse 2s infinite;
     }
     
-    .counter-name {
-      font-size: 18px;
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .status-indicator.disconnected {
+      background: #f44336;
+    }
+    
+    /* Dashboard Grid */
+    .dashboard-content {
+      padding: 30px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 20px;
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+    
+    /* Cards */
+    .card {
+      background: #1a1a1a;
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      border: 1px solid #333;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+    
+    .card-title {
+      font-size: 20px;
       font-weight: bold;
-      margin-bottom: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     
-    .counter-display {
+    /* Counter Card */
+    .counter-grid {
+      display: grid;
+      gap: 15px;
+    }
+    
+    .counter-item {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 20px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 4px solid;
+    }
+    
+    .counter-item.kills { border-left-color: #4CAF50; }
+    .counter-item.extracted { border-left-color: #FFC107; }
+    .counter-item.kia { border-left-color: #F44336; }
+    
+    .counter-info h3 {
+      font-size: 14px;
+      color: #999;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .counter-value {
       font-size: 36px;
       font-weight: bold;
     }
     
-    .counter-section.kills .counter-display { color: #4CAF50; }
-    .counter-section.extracted .counter-display { color: #FFC107; }
-    .counter-section.kia .counter-display { color: #F44336; }
+    .counter-item.kills .counter-value { color: #4CAF50; }
+    .counter-item.extracted .counter-value { color: #FFC107; }
+    .counter-item.kia .counter-value { color: #F44336; }
     
-    .counter-buttons {
+    .counter-controls {
       display: flex;
-      gap: 10px;
+      gap: 8px;
     }
     
     .counter-btn {
-      width: 60px;
-      height: 60px;
-      font-size: 28px;
-      font-weight: bold;
-      border: none;
+      width: 45px;
+      height: 45px;
       border-radius: 8px;
+      border: none;
+      font-size: 24px;
+      font-weight: bold;
       cursor: pointer;
       transition: all 0.2s;
+      color: white;
+    }
+    
+    .counter-btn.minus {
+      background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
+    }
+    
+    .counter-btn.plus {
+      background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
     }
     
     .counter-btn:hover {
@@ -209,145 +268,85 @@
       transform: scale(0.95);
     }
     
-    .counter-btn:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-      transform: none;
-    }
-    
-    .counter-btn.minus {
-      background: #f44336;
-      color: white;
-    }
-    
-    .counter-btn.plus {
-      background: #4CAF50;
-      color: white;
-    }
-    
-    .reset-all-btn {
+    .reset-btn {
       width: 100%;
-      padding: 15px;
-      background: #FF5722;
+      padding: 12px;
+      margin-top: 15px;
+      background: linear-gradient(135deg, #FF5722 0%, #FF9800 100%);
       color: white;
       border: none;
       border-radius: 8px;
-      font-size: 18px;
       font-weight: bold;
       cursor: pointer;
-      margin-top: 20px;
-      transition: opacity 0.2s;
+      transition: transform 0.2s;
     }
     
-    .reset-all-btn:hover {
-      opacity: 0.9;
+    .reset-btn:hover {
+      transform: translateY(-2px);
     }
     
-    .reset-all-btn:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-    
-    /* Message Controls */
-    #messageControls {
-      background: #2a2a2a;
-      padding: 30px;
-      border-radius: 8px;
-      margin-top: 30px;
-    }
-    
-    .form-group {
-      margin: 15px 0;
-    }
-    
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: bold;
-      font-size: 14px;
-    }
-    
-    textarea {
+    /* Message Card */
+    .message-textarea {
       width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 5px;
-      border: 1px solid #444;
-      background: #1a1a1a;
+      min-height: 100px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 2px solid #333;
+      border-radius: 8px;
       color: white;
-      font-family: Arial, sans-serif;
+      font-size: 16px;
+      font-family: inherit;
       resize: vertical;
-      min-height: 80px;
+      transition: border-color 0.3s;
+    }
+    
+    .message-textarea:focus {
+      outline: none;
+      border-color: #667eea;
     }
     
     .message-buttons {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, 1fr);
       gap: 10px;
       margin-top: 15px;
     }
     
     .btn {
-      padding: 15px;
-      font-size: 16px;
-      font-weight: bold;
+      padding: 12px;
       border: none;
       border-radius: 8px;
+      font-weight: bold;
       cursor: pointer;
       transition: all 0.2s;
+      font-size: 14px;
     }
     
     .btn:hover {
-      opacity: 0.9;
-    }
-    
-    .btn:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
+      transform: translateY(-2px);
     }
     
     .btn-primary {
-      background: #2196F3;
+      background: linear-gradient(135deg, #2196F3 0%, #03A9F4 100%);
       color: white;
     }
     
     .btn-success {
-      background: #4CAF50;
+      background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
       color: white;
     }
     
     .btn-warning {
-      background: #FF9800;
+      background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%);
       color: white;
     }
     
     .btn-danger {
-      background: #f44336;
+      background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
       color: white;
     }
     
-    .message-preview {
-      margin-top: 20px;
-      padding: 15px;
-      background: rgba(0,0,0,0.3);
-      border-radius: 5px;
-      border-left: 4px solid #FFC107;
-    }
-    
-    .preview-label {
-      font-size: 12px;
-      color: #999;
-      margin-bottom: 8px;
-    }
-    
-    .preview-text {
-      font-size: 18px;
-      color: #FFC107;
-      font-weight: bold;
-      word-wrap: break-word;
-    }
-    
-    .status-badge {
+    .message-status {
       display: inline-block;
       padding: 4px 12px;
       border-radius: 12px;
@@ -356,14 +355,108 @@
       margin-left: 10px;
     }
     
-    .status-visible {
+    .message-status.visible {
       background: #4CAF50;
       color: white;
     }
     
-    .status-hidden {
+    .message-status.hidden {
       background: #666;
       color: white;
+    }
+    
+    .message-preview {
+      margin-top: 15px;
+      padding: 15px;
+      background: rgba(255, 193, 7, 0.1);
+      border-left: 4px solid #FFC107;
+      border-radius: 8px;
+      display: none;
+    }
+    
+    .message-preview.active {
+      display: block;
+    }
+    
+    .preview-text {
+      color: #FFC107;
+      font-weight: bold;
+      word-wrap: break-word;
+    }
+    
+    /* Celebration Card */
+    .celebration-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    
+    .celebration-btn {
+      padding: 25px 15px;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .celebration-btn:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    }
+    
+    .celebration-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .celebration-btn.hurrah {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .celebration-btn.failure {
+      background: linear-gradient(135deg, #FF1744 0%, #F50057 100%);
+    }
+    
+    .celebration-btn.rats {
+      background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+    }
+    
+    .celebration-btn.luck {
+      background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
+    }
+    
+    /* Large celebration card spanning 2 columns */
+    .card-large {
+      grid-column: span 2;
+    }
+    
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .card-large {
+        grid-column: span 1;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .dashboard-content {
+        grid-template-columns: 1fr;
+        padding: 15px;
+      }
+      
+      .dashboard-header {
+        padding: 15px;
+      }
+      
+      .dashboard-title {
+        font-size: 22px;
+      }
+      
+      .celebration-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -392,102 +485,103 @@
     </button>
   </div>
   
-  <!-- Main Control Panel (hidden until approved) -->
+  <!-- Main Dashboard -->
   <div id="controlPanel">
-    <h1>🎮 Stream Control Panel</h1>
-    
-    <div class="moderator-info" id="moderatorInfo">
-      Logged in as: <span id="loggedInName"></span>
-    </div>
-    
-    <div id="connectionStatus" class="disconnected">
-      Connecting to server...
-    </div>
-    
-    <!-- Counter Controls -->
-    <div id="counterControls">
-      <h2>📊 Counters</h2>
-      
-      <div class="counter-section kills">
-        <div class="counter-info">
-          <div class="counter-name">💀 Kills</div>
-          <div class="counter-display" id="killsDisplay">0</div>
-        </div>
-        <div class="counter-buttons">
-          <button class="counter-btn minus" onclick="decrementCounter('kills')" id="killsMinus">−</button>
-          <button class="counter-btn plus" onclick="incrementCounter('kills')" id="killsPlus">+</button>
-        </div>
-      </div>
-      
-      <div class="counter-section extracted">
-        <div class="counter-info">
-          <div class="counter-name">✅ Extracted</div>
-          <div class="counter-display" id="extractedDisplay">0</div>
-        </div>
-        <div class="counter-buttons">
-          <button class="counter-btn minus" onclick="decrementCounter('extracted')" id="extractedMinus">−</button>
-          <button class="counter-btn plus" onclick="incrementCounter('extracted')" id="extractedPlus">+</button>
-        </div>
-      </div>
-      
-      <div class="counter-section kia">
-        <div class="counter-info">
-          <div class="counter-name">☠️ KIA</div>
-          <div class="counter-display" id="kiaDisplay">0</div>
-        </div>
-        <div class="counter-buttons">
-          <button class="counter-btn minus" onclick="decrementCounter('kia')" id="kiaMinus">−</button>
-          <button class="counter-btn plus" onclick="incrementCounter('kia')" id="kiaPlus">+</button>
-        </div>
-      </div>
-      
-      <button class="reset-all-btn" onclick="resetAllCounters()" id="resetBtn">Reset All Counters</button>
-    </div>
-    
-    <!-- Message Controls -->
-    <div id="messageControls">
-      <h2>📢 Scrolling Message <span class="status-badge status-hidden" id="messageStatus">Hidden</span></h2>
-      
-      <div class="form-group">
-        <label>Message Text:</label>
-        <textarea id="messageInput" placeholder="Enter your message here..."></textarea>
-      </div>
-      
-      <div class="message-buttons">
-        <button class="btn btn-primary" onclick="updateMessage()" id="updateBtn">Update Message</button>
-        <button class="btn btn-success" onclick="showMessage()" id="showBtn">Show Message</button>
-        <button class="btn btn-warning" onclick="hideMessage()" id="hideBtn">Hide Message</button>
-        <button class="btn btn-danger" onclick="clearMessage()" id="clearBtn">Clear Message</button>
-      </div>
-      
-      <div class="message-preview" id="messagePreview" style="display: none;">
-        <div class="preview-label">Current Message:</div>
-        <div class="preview-text" id="previewText"></div>
+    <!-- Header -->
+    <div class="dashboard-header">
+      <div class="dashboard-title">🎮 Stream Control Dashboard</div>
+      <div class="moderator-badge">
+        <div class="status-indicator" id="statusIndicator"></div>
+        <span id="loggedInName"></span>
       </div>
     </div>
     
-    <!-- Celebration Controls -->
-    <div id="celebrationControls" style="background: #2a2a2a; padding: 30px; border-radius: 8px; margin-top: 30px;">
-      <h2>🎉 Celebration</h2>
+    <!-- Dashboard Content -->
+    <div class="dashboard-content">
+      <!-- Counters Card -->
+      <div class="card">
+        <div class="card-title">📊 Mission Statistics</div>
+        <div class="counter-grid">
+          <div class="counter-item kills">
+            <div class="counter-info">
+              <h3>💀 Kills</h3>
+              <div class="counter-value" id="killsDisplay">0</div>
+            </div>
+            <div class="counter-controls">
+              <button class="counter-btn minus" onclick="decrementCounter('kills')">−</button>
+              <button class="counter-btn plus" onclick="incrementCounter('kills')">+</button>
+            </div>
+          </div>
+          
+          <div class="counter-item extracted">
+            <div class="counter-info">
+              <h3>✅ Extracted</h3>
+              <div class="counter-value" id="extractedDisplay">0</div>
+            </div>
+            <div class="counter-controls">
+              <button class="counter-btn minus" onclick="decrementCounter('extracted')">−</button>
+              <button class="counter-btn plus" onclick="incrementCounter('extracted')">+</button>
+            </div>
+          </div>
+          
+          <div class="counter-item kia">
+            <div class="counter-info">
+              <h3>☠️ KIA</h3>
+              <div class="counter-value" id="kiaDisplay">0</div>
+            </div>
+            <div class="counter-controls">
+              <button class="counter-btn minus" onclick="decrementCounter('kia')">−</button>
+              <button class="counter-btn plus" onclick="incrementCounter('kia')">+</button>
+            </div>
+          </div>
+        </div>
+        <button class="reset-btn" onclick="resetAllCounters()">Reset All Counters</button>
+      </div>
       
-      <button class="btn" onclick="triggerCelebration()" id="celebrateBtn" style="
-        width: 100%;
-        padding: 30px;
-        font-size: 24px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: all 0.3s;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-      ">
-        🎆 TRIGGER HURRAH! 🎆
-      </button>
+      <!-- Message Card -->
+      <div class="card">
+        <div class="card-title">
+          📢 Scrolling Message
+          <span class="message-status hidden" id="messageStatus">Hidden</span>
+        </div>
+        <textarea 
+          class="message-textarea" 
+          id="messageInput" 
+          placeholder="Enter your message here..."
+        ></textarea>
+        <div class="message-buttons">
+          <button class="btn btn-primary" onclick="updateMessage()">Update</button>
+          <button class="btn btn-success" onclick="showMessage()">Show</button>
+          <button class="btn btn-warning" onclick="hideMessage()">Hide</button>
+          <button class="btn btn-danger" onclick="clearMessage()">Clear</button>
+        </div>
+        <div class="message-preview" id="messagePreview">
+          <div style="font-size: 12px; color: #999; margin-bottom: 8px;">Current Message:</div>
+          <div class="preview-text" id="previewText"></div>
+        </div>
+      </div>
       
-      <p style="text-align: center; color: #999; margin-top: 15px; font-size: 14px;">
-        Displays "HURRAH!" with fireworks for 5 seconds
-      </p>
+      <!-- Celebrations Card (Large) -->
+      <div class="card card-large">
+        <div class="card-title">🎉 Mission Outcomes</div>
+        <div class="celebration-grid">
+          <button class="celebration-btn hurrah" onclick="triggerCelebration('hurrah')">
+            🎆<br>HURRAH!
+          </button>
+          <button class="celebration-btn failure" onclick="triggerCelebration('failure')">
+            💥<br>FAILURE!
+          </button>
+          <button class="celebration-btn rats" onclick="triggerCelebration('rats')">
+            🐀<br>DAMN RATS!
+          </button>
+          <button class="celebration-btn luck" onclick="triggerCelebration('luck')">
+            🍀<br>BETTER LUCK!
+          </button>
+        </div>
+        <p style="text-align: center; color: #666; margin-top: 15px; font-size: 13px;">
+          Each celebration displays for 5 seconds with themed fireworks
+        </p>
+      </div>
     </div>
   </div>
   
@@ -503,7 +597,7 @@
     const waitingScreen = document.getElementById('waitingScreen');
     const deniedScreen = document.getElementById('deniedScreen');
     const controlPanel = document.getElementById('controlPanel');
-    const statusEl = document.getElementById('connectionStatus');
+    const statusIndicator = document.getElementById('statusIndicator');
     
     // Counter display elements
     const killsDisplayEl = document.getElementById('killsDisplay');
@@ -515,9 +609,6 @@
     const messageStatusEl = document.getElementById('messageStatus');
     const messagePreviewEl = document.getElementById('messagePreview');
     const previewTextEl = document.getElementById('previewText');
-    
-    // Get all buttons
-    const allButtons = document.querySelectorAll('button');
     
     // Request moderator access
     function requestAccess() {
@@ -539,16 +630,14 @@
     socket.on('connect', () => {
       console.log('Connected to server');
       if (isApproved) {
-        statusEl.textContent = '✅ Connected to server';
-        statusEl.className = 'connected';
+        statusIndicator.classList.remove('disconnected');
       }
     });
     
     socket.on('disconnect', () => {
       console.log('Disconnected from server');
       if (isApproved) {
-        statusEl.textContent = '❌ Disconnected from server';
-        statusEl.className = 'disconnected';
+        statusIndicator.classList.add('disconnected');
       }
     });
     
@@ -561,8 +650,6 @@
       controlPanel.style.display = 'block';
       
       document.getElementById('loggedInName').textContent = moderatorName;
-      statusEl.textContent = '✅ Connected to server';
-      statusEl.className = 'connected';
     });
     
     // Moderator denied
@@ -581,7 +668,6 @@
     // Update counter displays
     socket.on('countersUpdate', (counters) => {
       if (!isApproved) return;
-      console.log('Counters updated:', counters);
       killsDisplayEl.textContent = counters.kills || 0;
       extractedDisplayEl.textContent = counters.extracted || 0;
       kiaDisplayEl.textContent = counters.kia || 0;
@@ -590,22 +676,23 @@
     // Update message display
     socket.on('messageUpdate', (msg) => {
       if (!isApproved) return;
-      console.log('Message updated:', msg);
       
       if (msg.text) {
         messageInputEl.value = msg.text;
         previewTextEl.textContent = msg.text;
-        messagePreviewEl.style.display = 'block';
+        messagePreviewEl.classList.add('active');
       } else {
-        messagePreviewEl.style.display = 'none';
+        messagePreviewEl.classList.remove('active');
       }
       
       if (msg.visible) {
         messageStatusEl.textContent = 'Visible';
-        messageStatusEl.className = 'status-badge status-visible';
+        messageStatusEl.classList.remove('hidden');
+        messageStatusEl.classList.add('visible');
       } else {
         messageStatusEl.textContent = 'Hidden';
-        messageStatusEl.className = 'status-badge status-hidden';
+        messageStatusEl.classList.remove('visible');
+        messageStatusEl.classList.add('hidden');
       }
     });
     
@@ -655,19 +742,8 @@
     }
     
     // Celebration control function
-    function triggerCelebration() {
-      console.log('Triggering celebration');
-      socket.emit('triggerCelebration');
-      
-      // Visual feedback on button
-      const btn = document.getElementById('celebrateBtn');
-      btn.textContent = '🎉 FIRED! 🎉';
-      btn.style.transform = 'scale(0.95)';
-      
-      setTimeout(() => {
-        btn.textContent = '🎆 TRIGGER HURRAH! 🎆';
-        btn.style.transform = 'scale(1)';
-      }, 1000);
+    function triggerCelebration(type) {
+      socket.emit('triggerCelebration', type);
     }
   </script>
 </body>
