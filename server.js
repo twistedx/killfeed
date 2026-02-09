@@ -96,7 +96,7 @@ io.on('connection', (socket) => {
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running on port ${PORT}`);
-  console.log(`📺 OBS Overlay: http://localhost:${PORT}/obs-overlay.html`);
-  console.log(`📺 OBS Message: http://localhost:${PORT}/obs-message.html`);
-  console.log(`🎮 Moderator Panel: http://localhost:${PORT}/moderator-panel.html`);
+  console.log(`📺 OBS Overlay: https://killfeed-r756.onrender.com//obs-overlay.html`);
+  console.log(`📺 OBS Message: https://killfeed-r756.onrender.com/}/obs-message.html`);
+  console.log(`🎮 Moderator Panel: https://killfeed-r756.onrender.com/moderator-panel.html`);
 });
