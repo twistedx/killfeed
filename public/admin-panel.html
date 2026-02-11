@@ -18,104 +18,74 @@
       min-height: 100vh;
     }
     
-    /* Login Screen */
-    #loginScreen {
+    /* Loading Screen */
+    #loadingScreen {
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      padding: 20px;
+      flex-direction: column;
+      gap: 20px;
     }
     
-    .login-box {
-      background: #1a1a1a;
+    .spinner {
+      border: 4px solid #333;
+      border-top: 4px solid #FFD700;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      font-size: 18px;
+      color: #999;
+    }
+    
+    /* Access Denied Screen */
+    #accessDenied {
+      display: none;
+      max-width: 500px;
+      margin: 100px auto;
+      text-align: center;
       padding: 40px;
+      background: #1a1a1a;
       border-radius: 16px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-      width: 100%;
-      max-width: 400px;
-      border: 1px solid #333;
+      border: 3px solid #f44336;
     }
     
-    .login-box h1 {
-      text-align: center;
-      margin-bottom: 10px;
+    #accessDenied h2 {
+      color: #f44336;
+      margin-bottom: 20px;
       font-size: 32px;
-      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
     }
     
-    .login-box p {
-      text-align: center;
+    #accessDenied p {
       color: #999;
       margin-bottom: 30px;
-      font-size: 14px;
+      line-height: 1.6;
     }
     
-    .form-group {
-      margin-bottom: 20px;
-    }
-    
-    .form-group label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: bold;
-      font-size: 14px;
-    }
-    
-    .form-group input {
-      width: 100%;
-      padding: 15px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: 2px solid #333;
-      background: #0f0f0f;
+    .btn-home {
+      padding: 12px 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      transition: border-color 0.3s;
-    }
-    
-    .form-group input:focus {
-      outline: none;
-      border-color: #FFD700;
-    }
-    
-    .login-btn {
-      width: 100%;
-      padding: 15px;
-      font-size: 18px;
-      font-weight: bold;
-      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-      color: #000;
       border: none;
       border-radius: 8px;
+      font-weight: bold;
       cursor: pointer;
-      transition: transform 0.2s;
+      text-decoration: none;
+      display: inline-block;
     }
     
-    .login-btn:hover {
+    .btn-home:hover {
       transform: translateY(-2px);
-    }
-    
-    .login-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    
-    .error-message {
-      background: rgba(244, 67, 54, 0.2);
-      color: #f44336;
-      padding: 12px;
-      border-radius: 8px;
-      margin-top: 15px;
-      text-align: center;
-      font-size: 14px;
-      display: none;
-    }
-    
-    .error-message.show {
-      display: block;
     }
     
     /* Dashboard */
@@ -142,6 +112,24 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+    }
+    
+    .admin-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .admin-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid #FFD700;
+    }
+    
+    .admin-name {
+      font-weight: bold;
+      color: #FFD700;
     }
     
     .status-badge {
@@ -208,11 +196,6 @@
       font-weight: bold;
     }
     
-    .badge-pending {
-      background: #FFC107;
-      color: #000;
-    }
-    
     .badge-approved {
       background: #4CAF50;
       color: white;
@@ -226,7 +209,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-left: 4px solid;
+      border-left: 4px solid #4CAF50;
       transition: transform 0.2s;
     }
     
@@ -234,25 +217,31 @@
       transform: translateX(5px);
     }
     
-    .moderator-card.pending {
-      border-left-color: #FFC107;
-    }
-    
-    .moderator-card.approved {
-      border-left-color: #4CAF50;
-    }
-    
     .moderator-info {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .moderator-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid #4CAF50;
+    }
+    
+    .moderator-details {
       flex: 1;
     }
     
     .moderator-name {
       font-size: 18px;
       font-weight: bold;
-      margin-bottom: 8px;
+      margin-bottom: 5px;
     }
     
-    .moderator-details {
+    .moderator-meta {
       font-size: 13px;
       color: #999;
       line-height: 1.6;
@@ -275,16 +264,6 @@
     
     .btn:hover {
       transform: translateY(-2px);
-    }
-    
-    .btn-approve {
-      background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
-      color: white;
-    }
-    
-    .btn-deny {
-      background: linear-gradient(135deg, #FF5722 0%, #FF9800 100%);
-      color: white;
     }
     
     .btn-kick {
@@ -327,41 +306,113 @@
         flex: 1;
       }
     }
+    /* Add to admin-panel.html styles */
+
+.dashboard-header {
+  background: #1a1a1a;
+  padding: 20px 30px;
+  border-bottom: 2px solid #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(255, 215, 0, 0.2);
+  border: 2px solid #FFD700;
+  border-radius: 8px;
+  color: #FFD700;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.back-btn:hover {
+  background: #FFD700;
+  color: #000;
+  transform: translateX(-3px);
+}
+
+.back-btn svg {
+  transition: transform 0.3s;
+}
+
+.back-btn:hover svg {
+  transform: translateX(-3px);
+}
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .header-left {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
   </style>
 </head>
 <body>
-  <!-- Login Screen -->
-  <div id="loginScreen">
-    <div class="login-box">
-      <h1>👑 Admin Login</h1>
-      <p>Enter admin password to continue</p>
-      
-      <form id="loginForm" onsubmit="return false;">
-        <div class="form-group">
-          <label for="passwordInput">Password</label>
-          <input 
-            type="password" 
-            id="passwordInput" 
-            placeholder="Enter admin password"
-            autocomplete="current-password"
-          />
-        </div>
-        
-        <button type="submit" class="login-btn" onclick="attemptLogin()">
-          Login
-        </button>
-        
-        <div class="error-message" id="errorMessage">
-          Incorrect password. Please try again.
-        </div>
-      </form>
-    </div>
+  <!-- Loading Screen -->
+  <div id="loadingScreen">
+    <div class="spinner"></div>
+    <div class="loading-text">Verifying admin access...</div>
+  </div>
+  
+  <!-- Access Denied Screen -->
+  <div id="accessDenied">
+    <h2>🔒 Access Denied</h2>
+    <p>You do not have admin permissions to access this panel.</p>
+    <p style="font-size: 14px; color: #666;">Only server owners and users with the Admin role can access this page.</p>
+    <a href="/" class="btn-home">← Back to Home</a>
   </div>
   
   <!-- Dashboard Panel -->
   <div id="dashboardPanel">
-    <div class="dashboard-header">
-      <div class="dashboard-title">👑 Admin Dashboard</div>
+<!-- In admin-panel.html, replace the dashboard-header div -->
+
+<div class="dashboard-header">
+  <div class="header-left">
+    <a href="/dashboard.html" class="back-btn" title="Back to Dashboard">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Dashboard
+    </a>
+    <div class="dashboard-title">👑 Admin Dashboard</div>
+  </div>
+  
+  <div class="admin-info">
+    <img id="adminAvatar" class="admin-avatar" src="" alt="Avatar">
+    <div>
+      <div class="admin-name" id="adminName"></div>
+      <div style="font-size: 12px; color: #999;">Administrator</div>
+    </div>
+  </div>
+  
+  <div class="status-badge">
+    <div class="status-indicator" id="statusIndicator"></div>
+    <span id="connectionText">Connected</span>
+  </div>
+</div>
+      
       <div class="status-badge">
         <div class="status-indicator" id="statusIndicator"></div>
         <span id="connectionText">Connected</span>
@@ -369,29 +420,16 @@
     </div>
     
     <div class="dashboard-content">
-      <!-- Pending Connections -->
-      <div class="section">
-        <div class="section-header">
-          <div class="section-title">
-            ⏳ Pending Requests
-            <span class="badge badge-pending" id="pendingCount">0</span>
-          </div>
-        </div>
-        <div id="pendingList">
-          <div class="empty-state">No pending requests</div>
-        </div>
-      </div>
-      
       <!-- Approved Moderators -->
       <div class="section">
         <div class="section-header">
           <div class="section-title">
-            ✅ Approved Moderators
+            ✅ Connected Moderators
             <span class="badge badge-approved" id="approvedCount">0</span>
           </div>
         </div>
         <div id="approvedList">
-          <div class="empty-state">No approved moderators</div>
+          <div class="empty-state">No moderators currently connected</div>
         </div>
       </div>
     </div>
@@ -403,133 +441,105 @@
   <script>
     const socket = io('https://killfeed-r756.onrender.com');
     
-    const loginScreen = document.getElementById('loginScreen');
+    const loadingScreen = document.getElementById('loadingScreen');
+    const accessDenied = document.getElementById('accessDenied');
     const dashboardPanel = document.getElementById('dashboardPanel');
-    const passwordInput = document.getElementById('passwordInput');
-    const errorMessage = document.getElementById('errorMessage');
     const statusIndicator = document.getElementById('statusIndicator');
     const connectionText = document.getElementById('connectionText');
-    const pendingListEl = document.getElementById('pendingList');
     const approvedListEl = document.getElementById('approvedList');
-    const pendingCountEl = document.getElementById('pendingCount');
     const approvedCountEl = document.getElementById('approvedCount');
+    const adminNameEl = document.getElementById('adminName');
+    const adminAvatarEl = document.getElementById('adminAvatar');
     
-    let isAuthenticated = false;
+    let currentUser = null;
+    
+    // Check authentication on page load
+    async function checkAuth() {
+      try {
+        const response = await fetch('/auth/user');
+        
+        if (!response.ok) {
+          // Not authenticated - redirect to home
+          window.location.href = '/?error=not_authenticated';
+          return;
+        }
+        
+        const user = await response.json();
+        currentUser = user;
+        
+        // Check if user is admin
+        if (!user.isAdmin) {
+          // Not an admin - show access denied
+          loadingScreen.style.display = 'none';
+          accessDenied.style.display = 'block';
+          return;
+        }
+        
+        // User is admin - show dashboard
+        loadingScreen.style.display = 'none';
+        dashboardPanel.style.display = 'block';
+        
+        // Set admin info
+        adminNameEl.textContent = `${user.username}#${user.discriminator}`;
+        
+        if (user.avatar) {
+          adminAvatarEl.src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
+        } else {
+          adminAvatarEl.src = `https://cdn.discordapp.com/embed/avatars/${parseInt(user.discriminator) % 5}.png`;
+        }
+        
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        window.location.href = '/?error=auth_check_failed';
+      }
+    }
     
     // Connection status
     socket.on('connect', () => {
       console.log('Connected to server');
-      if (isAuthenticated) {
-        statusIndicator.classList.remove('disconnected');
-        connectionText.textContent = 'Connected';
-      }
+      statusIndicator.classList.remove('disconnected');
+      connectionText.textContent = 'Connected';
     });
     
     socket.on('disconnect', () => {
       console.log('Disconnected from server');
-      if (isAuthenticated) {
-        statusIndicator.classList.add('disconnected');
-        connectionText.textContent = 'Disconnected';
-      }
+      statusIndicator.classList.add('disconnected');
+      connectionText.textContent = 'Disconnected';
     });
     
-    // Login function
-    function attemptLogin() {
-      const password = passwordInput.value;
-      if (!password) {
-        errorMessage.textContent = 'Please enter a password';
-        errorMessage.classList.add('show');
-        return;
-      }
+    // Update approved moderators list
+    socket.on('approvedModeratorsUpdate', (mods) => {
+      console.log('Approved moderators:', mods);
+      approvedCountEl.textContent = mods.length;
       
-      errorMessage.classList.remove('show');
-      socket.emit('authenticateAdmin', password);
-    }
-    
-    // Allow Enter key to submit
-    passwordInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        attemptLogin();
-      }
-    });
-    
-    // Authentication response
-    socket.on('adminAuthenticated', (success) => {
-      if (success) {
-        console.log('Admin authenticated successfully');
-        isAuthenticated = true;
-        loginScreen.style.display = 'none';
-        dashboardPanel.style.display = 'block';
-        passwordInput.value = '';
-      } else {
-        console.log('Admin authentication failed');
-        errorMessage.textContent = 'Incorrect password. Please try again.';
-        errorMessage.classList.add('show');
-        passwordInput.value = '';
-        passwordInput.focus();
-      }
-    });
-    
-    // Update pending connections
-    socket.on('pendingConnectionsUpdate', (pending) => {
-      console.log('Pending connections:', pending);
-      pendingCountEl.textContent = pending.length;
-      
-      if (pending.length === 0) {
-        pendingListEl.innerHTML = '<div class="empty-state">No pending requests</div>';
-        return;
-      }
-      
-      pendingListEl.innerHTML = '';
-      pending.forEach(mod => {
-        const card = document.createElement('div');
-        card.className = 'moderator-card pending';
-        card.innerHTML = `
-          <div class="moderator-info">
-            <div class="moderator-name">👤 ${escapeHtml(mod.name)}</div>
-            <div class="moderator-details">
-              Requested: ${new Date(mod.requestedAt).toLocaleString()}<br>
-              Socket ID: <code>${mod.socketId}</code>
-            </div>
-          </div>
-          <div class="moderator-actions">
-            <button class="btn btn-approve" onclick="approveModerator('${mod.socketId}')">
-              ✓ Approve
-            </button>
-            <button class="btn btn-deny" onclick="denyModerator('${mod.socketId}')">
-              ✗ Deny
-            </button>
-          </div>
-        `;
-        pendingListEl.appendChild(card);
-      });
-    });
-    
-    // Update approved moderators
-    socket.on('approvedModeratorsUpdate', (approved) => {
-      console.log('Approved moderators:', approved);
-      approvedCountEl.textContent = approved.length;
-      
-      if (approved.length === 0) {
-        approvedListEl.innerHTML = '<div class="empty-state">No approved moderators</div>';
+      if (mods.length === 0) {
+        approvedListEl.innerHTML = '<div class="empty-state">No moderators currently connected</div>';
         return;
       }
       
       approvedListEl.innerHTML = '';
-      approved.forEach(mod => {
+      mods.forEach(mod => {
         const card = document.createElement('div');
-        card.className = 'moderator-card approved';
+        card.className = 'moderator-card';
+        
+        // Get Discord avatar
+        const avatarUrl = `https://cdn.discordapp.com/embed/avatars/${parseInt(mod.discordId || '0') % 5}.png`;
+        
         card.innerHTML = `
           <div class="moderator-info">
-            <div class="moderator-name">✅ ${escapeHtml(mod.name)}</div>
+            <img class="moderator-avatar" src="${avatarUrl}" alt="${escapeHtml(mod.name)}">
             <div class="moderator-details">
-              Connected: ${new Date(mod.connectedAt).toLocaleString()}<br>
-              Socket ID: <code>${mod.socketId}</code>
+              <div class="moderator-name">${mod.isAdmin ? '👑' : '🎮'} ${escapeHtml(mod.name)}</div>
+              <div class="moderator-meta">
+                Connected: ${new Date(mod.connectedAt).toLocaleString()}<br>
+                Role: ${mod.isAdmin ? '<strong>Admin</strong>' : 'Moderator'}<br>
+                Socket: <code>${mod.socketId}</code>
+              </div>
             </div>
           </div>
           <div class="moderator-actions">
             <button class="btn btn-kick" onclick="kickModerator('${mod.socketId}')">
-              ⛔ Kick
+              ⛔ Disconnect
             </button>
           </div>
         `;
@@ -537,21 +547,9 @@
       });
     });
     
-    // Admin actions
-    function approveModerator(socketId) {
-      console.log('Approving moderator:', socketId);
-      socket.emit('approveModerator', socketId);
-    }
-    
-    function denyModerator(socketId) {
-      if (confirm('Deny this moderator request?')) {
-        console.log('Denying moderator:', socketId);
-        socket.emit('denyModerator', socketId);
-      }
-    }
-    
+    // Kick moderator
     function kickModerator(socketId) {
-      if (confirm('Kick this moderator? They will lose access immediately.')) {
+      if (confirm('Disconnect this moderator? They will need to reconnect.')) {
         console.log('Kicking moderator:', socketId);
         socket.emit('kickModerator', socketId);
       }
@@ -563,8 +561,8 @@
       return div.innerHTML;
     }
     
-    // Focus password input on load
-    passwordInput.focus();
+    // Check auth on page load
+    checkAuth();
   </script>
 </body>
 </html>

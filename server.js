@@ -1,16 +1,16 @@
 // server.js
 require('dotenv').config();
+
 const express = require('express');
 const http = require('http');
-const { Server } = require('socket.io');
-const session = require('express-session');
 const path = require('path');
-
-const { verifyBotToken } = require('./utils/botstartup');
+const session = require('express-session');
+const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
 
+// Socket.IO setup
 const io = new Server(server, {
   cors: {
     origin: process.env.CORS_ORIGIN || "*",
@@ -18,12 +18,13 @@ const io = new Server(server, {
   }
 });
 
-const PORT = process.env.PORT || 3000;
-const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+// Middleware
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
 
-// Session middleware
+// Session configuration
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'super-secret-key-change-in-production',
+  secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -33,50 +34,77 @@ app.use(session({
   }
 }));
 
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json());
+// Import routes
+// server.js
+const authRoutes = require('./routes/auth');
 
-// Bot token verification at startup
-(async () => {
-  console.log('Verifying Discord bot token...');
-  const botIsValid = await verifyBotToken();
+// IMPORTANT: Mount auth routes BEFORE the root handler
+app.use('/auth', authRoutes);  // ✅ This should come first
+const panelRoutes = require('./routes/panels');
 
-  if (!botIsValid) {
-    console.warn('⚠️  Bot checks will be disabled or limited.');
-    // Uncomment to make it strict:
-    // process.exit(1);
-  }
-})();
+// Use routes
+app.use('/auth', authRoutes);
+app.use('/', panelRoutes);
 
-// Routes
-app.use(require('./routes/auth'));
-app.use(require('./routes/panels'));
-
-// Root page
+// Root route
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Health check (useful for Render)
+// Health check
 app.get('/health', (req, res) => {
-  res.json({
+  res.json({ 
     status: 'ok',
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV,
-    port: PORT,
-    baseUrl: BASE_URL,
     timestamp: new Date().toISOString()
   });
 });
 
 // Socket.IO handlers
-require('./socket/handlers')(io);
+const socketHandlers = require('./socket/handlers');
+socketHandlers(io);
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Base URL: ${BASE_URL}`);
-  console.log(`Homepage: ${BASE_URL}/`);
-  console.log(`Login: ${BASE_URL}/auth/discord`);
-  console.log(`Health: ${BASE_URL}/health`);
+// Bot verification on startup (optional)
+const { verifyBotToken } = require('./utils/botstartup');
+
+async function startServer() {
+  // Verify Discord configuration
+  console.log('=== Discord Configuration ===');
+  console.log('Client ID:', process.env.DISCORD_CLIENT_ID ? '✓ Set' : '✗ Missing');
+  console.log('Client Secret:', process.env.DISCORD_CLIENT_SECRET ? '✓ Set' : '✗ Missing');
+  console.log('Redirect URI:', process.env.DISCORD_REDIRECT_URI || 'Using default');
+  console.log('Server ID:', process.env.DISCORD_SERVER_ID || 'Using default');
+  console.log('Admin Role IDs:', process.env.ADMIN_ROLE_IDS || '✗ Not set');
+  console.log('Moderator Role IDs:', process.env.MODERATOR_ROLE_IDS || '✗ Not set');
+  
+  // Verify bot token if provided
+  if (process.env.DISCORD_BOT_TOKEN) {
+    await verifyBotToken();
+  } else {
+    console.warn('⚠️  DISCORD_BOT_TOKEN not set - bot features disabled');
+  }
+  
+  console.log('============================\n');
+
+  // Start server
+  const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`✅ Server running on port ${PORT}`);
+    console.log(`🏠 Homepage: http://localhost:${PORT}/`);
+    console.log(`🎮 Moderator Panel: http://localhost:${PORT}/moderator-panel.html`);
+    console.log(`👑 Admin Panel: http://localhost:${PORT}/admin-panel.html`);
+  });
+}
+
+// Error handlers
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  process.exit(1);
 });
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// Start the server
+startServer();

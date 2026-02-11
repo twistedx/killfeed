@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kill Feed System - Dashboard</title>
+  <title>Kill Feed System - Stream Overlay Management</title>
   <style>
     * {
       box-sizing: border-box;
@@ -15,15 +15,12 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       padding: 20px;
     }
     
     .container {
-      width: 100%;
       max-width: 1200px;
+      margin: 0 auto;
     }
     
     /* Header */
@@ -31,20 +28,23 @@
       text-align: center;
       color: white;
       margin-bottom: 40px;
+      padding: 40px 20px;
     }
     
     .header h1 {
-      font-size: 48px;
-      margin-bottom: 10px;
+      font-size: 56px;
+      margin-bottom: 15px;
       text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     }
     
     .header p {
-      font-size: 18px;
-      opacity: 0.9;
+      font-size: 24px;
+      opacity: 0.95;
+      max-width: 700px;
+      margin: 0 auto;
     }
     
-    /* Error/Info Messages */
+    /* Error Messages */
     .message-box {
       background: white;
       border-radius: 16px;
@@ -59,11 +59,6 @@
       display: block;
     }
     
-    .message-box.info {
-      border-left: 5px solid #2196F3;
-      display: block;
-    }
-    
     .message-box h3 {
       margin-bottom: 10px;
       color: #333;
@@ -71,192 +66,155 @@
     
     .message-box p {
       color: #666;
-      line-height: 1.6;
     }
     
     /* Login Section */
     .login-section {
       background: white;
-      border-radius: 16px;
-      padding: 40px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-      margin-bottom: 30px;
+      border-radius: 20px;
+      padding: 50px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+      margin-bottom: 40px;
       text-align: center;
     }
     
     .login-section h2 {
-      font-size: 28px;
+      font-size: 32px;
       margin-bottom: 15px;
       color: #333;
     }
     
     .login-section p {
-      font-size: 16px;
+      font-size: 18px;
       color: #666;
-      margin-bottom: 30px;
+      margin-bottom: 35px;
     }
     
     .discord-login-btn {
       display: inline-flex;
       align-items: center;
-      gap: 12px;
-      padding: 16px 32px;
-      font-size: 18px;
+      gap: 15px;
+      padding: 18px 40px;
+      font-size: 20px;
       font-weight: bold;
       background: #5865F2;
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       cursor: pointer;
       transition: all 0.3s;
       text-decoration: none;
-      box-shadow: 0 4px 16px rgba(88, 101, 242, 0.4);
+      box-shadow: 0 6px 24px rgba(88, 101, 242, 0.5);
     }
     
     .discord-login-btn:hover {
       background: #4752C4;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(88, 101, 242, 0.5);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(88, 101, 242, 0.6);
     }
     
     .discord-icon {
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
     }
     
-    /* Cards Grid */
-    .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 25px;
+    /* Feature Cards */
+    .features-section {
+      margin-bottom: 40px;
+    }
+    
+    .section-title {
+      text-align: center;
+      color: white;
+      font-size: 36px;
       margin-bottom: 30px;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     }
     
-    .card {
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+    }
+    
+    .feature-card {
       background: white;
       border-radius: 16px;
-      padding: 30px;
+      padding: 35px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
       transition: all 0.3s;
-      cursor: pointer;
-      text-decoration: none;
-      color: inherit;
-      display: block;
+      position: relative;
+      overflow: hidden;
     }
     
-    .card:hover {
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .feature-card:hover {
       transform: translateY(-8px);
       box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
     }
     
-    .card.disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    
-    .card.disabled:hover {
-      transform: none;
-    }
-    
-    .card-icon {
-      font-size: 48px;
-      margin-bottom: 15px;
-    }
-    
-    .card-title {
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: #333;
-    }
-    
-    .card-description {
-      font-size: 14px;
-      color: #666;
-      line-height: 1.6;
-      margin-bottom: 15px;
-    }
-    
-    .card-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: bold;
-      margin-top: 10px;
-    }
-    
-    .badge-admin {
-      background: #FFD700;
-      color: #000;
-    }
-    
-    .badge-moderator {
-      background: #667eea;
-      color: white;
-    }
-    
-    .badge-public {
-      background: #4CAF50;
-      color: white;
-    }
-    
-    .badge-obs {
-      background: #FF5722;
-      color: white;
-    }
-    
-    .badge-locked {
-      background: #999;
-      color: white;
-    }
-    
-    /* Info Section */
-    .info-section {
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 16px;
-      padding: 25px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    .feature-icon {
+      font-size: 56px;
       margin-bottom: 20px;
     }
     
-    .info-section h3 {
-      font-size: 20px;
-      margin-bottom: 15px;
+    .feature-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 12px;
       color: #333;
     }
     
-    .info-section ul {
+    .feature-description {
+      font-size: 15px;
+      color: #666;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+    
+    .feature-list {
       list-style: none;
       padding: 0;
     }
     
-    .info-section li {
+    .feature-list li {
+      color: #555;
       padding: 8px 0;
-      color: #666;
       font-size: 14px;
-      line-height: 1.6;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     
-    .info-section li::before {
-      content: "→ ";
-      color: #667eea;
+    .feature-list li::before {
+      content: "✓";
+      color: #4CAF50;
       font-weight: bold;
-      margin-right: 8px;
+      font-size: 18px;
     }
     
+    /* Access Requirements */
     .requirements-box {
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(255, 255, 255, 0.98);
       border-radius: 16px;
-      padding: 25px;
+      padding: 30px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-      margin-bottom: 20px;
+      margin-bottom: 30px;
       border-left: 5px solid #667eea;
     }
     
     .requirements-box h3 {
-      font-size: 20px;
-      margin-bottom: 15px;
+      font-size: 24px;
+      margin-bottom: 20px;
       color: #333;
       display: flex;
       align-items: center;
@@ -264,9 +222,10 @@
     }
     
     .requirements-box p {
-      color: #666;
-      line-height: 1.8;
+      color: #555;
+      line-height: 1.9;
       margin-bottom: 15px;
+      font-size: 16px;
     }
     
     .requirements-box strong {
@@ -277,8 +236,8 @@
     .footer {
       text-align: center;
       color: white;
-      margin-top: 30px;
-      opacity: 0.8;
+      margin-top: 40px;
+      opacity: 0.9;
       font-size: 14px;
     }
     
@@ -295,6 +254,7 @@
       align-items: center;
       gap: 10px;
       font-size: 14px;
+      z-index: 1000;
     }
     
     .status-dot {
@@ -305,22 +265,26 @@
       animation: pulse 2s infinite;
     }
     
-    .status-dot.disconnected {
-      background: #f44336;
-      animation: none;
-    }
-    
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
     }
     
+    .status-dot.disconnected {
+      background: #f44336;
+      animation: none;
+    }
+    
     @media (max-width: 768px) {
       .header h1 {
-        font-size: 32px;
+        font-size: 36px;
       }
       
-      .cards-grid {
+      .header p {
+        font-size: 18px;
+      }
+      
+      .features-grid {
         grid-template-columns: 1fr;
       }
       
@@ -328,10 +292,6 @@
         position: static;
         margin-bottom: 20px;
         justify-content: center;
-      }
-      
-      .login-section {
-        padding: 25px;
       }
     }
   </style>
@@ -346,10 +306,10 @@
     <!-- Header -->
     <div class="header">
       <h1>🎮 Kill Feed System</h1>
-      <p>Stream Overlay Management Dashboard</p>
+      <p>Professional stream overlay management with real-time Discord integration</p>
     </div>
     
-    <!-- Error/Info Messages -->
+    <!-- Error Messages -->
     <div class="message-box" id="messageBox">
       <h3 id="messageTitle"></h3>
       <p id="messageText"></p>
@@ -357,21 +317,21 @@
     
     <!-- Requirements Box -->
     <div class="requirements-box">
-      <h3>📋 Access Requirements</h3>
+      <h3>📋 How It Works</h3>
       <p>
-        To use this system, you must:
-        <br><strong>1.</strong> Be a member of the TwistedXvs Discord server
-        <br><strong>2.</strong> Have the <strong>Moderator</strong> or <strong>Admin</strong> role assigned
+        <strong>1.</strong> Login with your Discord account<br>
+        <strong>2.</strong> Get instant access based on your server role<br>
+        <strong>3.</strong> Control your stream overlays in real-time
       </p>
-      <p style="font-size: 13px; color: #999; margin-bottom: 0;">
-        Don't have access? Contact the server administrator to request moderator permissions.
+      <p style="font-size: 14px; color: #999; margin: 0;">
+        Must be a member of the TwistedXvs Discord server with Moderator or Admin role
       </p>
     </div>
     
     <!-- Login Section -->
     <div class="login-section">
-      <h2>🔐 Authentication Required</h2>
-      <p>Login with Discord to access the control panels</p>
+      <h2>🔐 Get Started</h2>
+      <p>Authenticate with Discord to access your personalized dashboard</p>
       
       <a href="/auth/discord" class="discord-login-btn">
         <svg class="discord-icon" viewBox="0 0 71 55" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -383,66 +343,79 @@
       </a>
     </div>
     
-    <!-- Quick Links -->
-    <div class="cards-grid">
-      <!-- Moderator Panel -->
-      <div class="card disabled">
-        <div class="card-icon">🎮</div>
-        <div class="card-title">Moderator Panel</div>
-        <div class="card-description">
-          Control counters, messages, and celebrations in real-time during streams.
-        </div>
-        <span class="card-badge badge-locked">🔒 Login Required</span>
-      </div>
+    <!-- Features Section -->
+    <div class="features-section">
+      <h2 class="section-title">✨ Powerful Features</h2>
       
-      <!-- Admin Panel -->
-      <div class="card disabled">
-        <div class="card-icon">👑</div>
-        <div class="card-title">Admin Panel</div>
-        <div class="card-description">
-          View connected moderators, monitor activity, and manage permissions.
+      <div class="features-grid">
+        <!-- Moderator Panel -->
+        <div class="feature-card">
+          <div class="feature-icon">🎮</div>
+          <div class="feature-title">Moderator Control</div>
+          <div class="feature-description">
+            Real-time stream overlay control with instant updates
+          </div>
+          <ul class="feature-list">
+            <li>Adjust kill, extracted, and KIA counters</li>
+            <li>Update scrolling messages live</li>
+            <li>Trigger celebration animations</li>
+            <li>Changes sync instantly to OBS</li>
+          </ul>
         </div>
-        <span class="card-badge badge-locked">🔒 Login Required</span>
-      </div>
-      
-      <!-- Configuration Panel -->
-      <div class="card disabled">
-        <div class="card-icon">⚙️</div>
-        <div class="card-title">Configuration</div>
-        <div class="card-description">
-          Customize overlay layout, colors, positions, and appearance settings.
+        
+        <!-- Admin Panel -->
+        <div class="feature-card">
+          <div class="feature-icon">👑</div>
+          <div class="feature-title">Admin Dashboard</div>
+          <div class="feature-description">
+            Complete system oversight and user management
+          </div>
+          <ul class="feature-list">
+            <li>Monitor connected moderators</li>
+            <li>View real-time system stats</li>
+            <li>Manage user permissions</li>
+            <li>Track overlay activity</li>
+          </ul>
         </div>
-        <span class="card-badge badge-locked">🔒 Login Required</span>
-      </div>
-      
-      <!-- OBS Overlays Info -->
-      <div class="card" onclick="showOBSInfo()">
-        <div class="card-icon">📺</div>
-        <div class="card-title">OBS Overlays</div>
-        <div class="card-description">
-          View URLs for adding browser sources to OBS Studio.
+        
+        <!-- Configuration -->
+        <div class="feature-card">
+          <div class="feature-icon">⚙️</div>
+          <div class="feature-title">Visual Configuration</div>
+          <div class="feature-description">
+            Customize every aspect of your overlays
+          </div>
+          <ul class="feature-list">
+            <li>Drag-and-drop positioning</li>
+            <li>Custom colors and themes</li>
+            <li>Adjustable sizes and fonts</li>
+            <li>Live preview mode</li>
+          </ul>
         </div>
-        <span class="card-badge badge-obs">For OBS</span>
+        
+        <!-- OBS Integration -->
+        <div class="feature-card">
+          <div class="feature-icon">📺</div>
+          <div class="feature-title">OBS Integration</div>
+          <div class="feature-description">
+            Seamless browser source setup for streaming
+          </div>
+          <ul class="feature-list">
+            <li>Ready-to-use browser source URLs</li>
+            <li>Transparent backgrounds</li>
+            <li>1920x1080 optimized</li>
+            <li>Auto-updates from control panel</li>
+          </ul>
+        </div>
       </div>
-    </div>
-    
-    <!-- Info Section -->
-    <div class="info-section">
-      <h3>📋 System Information</h3>
-      <ul>
-        <li><strong>Server Status:</strong> <span id="serverStatus">Checking...</span></li>
-        <li><strong>Active Moderators:</strong> <span id="activeMods">0</span></li>
-        <li><strong>Authentication:</strong> Discord OAuth 2.0</li>
-      </ul>
     </div>
     
     <!-- Footer -->
     <div class="footer">
-      <p>Kill Feed System v2.0 | Discord OAuth Authentication</p>
+      <p>Kill Feed System v2.0 | Powered by Discord OAuth & Socket.IO</p>
     </div>
   </div>
   
-  <!-- Load Socket.IO from CDN -->
   <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
   
   <script>
@@ -450,32 +423,19 @@
     
     const statusDot = document.getElementById('statusDot');
     const statusText = document.getElementById('statusText');
-    const serverStatus = document.getElementById('serverStatus');
-    const activeMods = document.getElementById('activeMods');
     const messageBox = document.getElementById('messageBox');
     const messageTitle = document.getElementById('messageTitle');
     const messageText = document.getElementById('messageText');
     
     // Connection status
     socket.on('connect', () => {
-      console.log('Connected to server');
       statusDot.classList.remove('disconnected');
       statusText.textContent = 'Connected';
-      serverStatus.textContent = 'Online';
-      serverStatus.style.color = '#4CAF50';
     });
     
     socket.on('disconnect', () => {
-      console.log('Disconnected from server');
       statusDot.classList.add('disconnected');
       statusText.textContent = 'Disconnected';
-      serverStatus.textContent = 'Offline';
-      serverStatus.style.color = '#f44336';
-    });
-    
-    // Update stats when received
-    socket.on('approvedModeratorsUpdate', (mods) => {
-      activeMods.textContent = mods.length;
     });
     
     // Check for error messages in URL
@@ -488,58 +448,33 @@
       switch(error) {
         case 'no_code':
           messageTitle.textContent = '❌ Authentication Error';
-          messageText.textContent = 'No authorization code received from Discord. Please try logging in again.';
+          messageText.textContent = 'No authorization code received from Discord.';
           break;
         case 'token_failed':
           messageTitle.textContent = '❌ Authentication Failed';
-          messageText.textContent = 'Failed to exchange authorization code. Please try again or contact support.';
+          messageText.textContent = 'Failed to exchange authorization code. Please try again.';
           break;
         case 'not_in_server':
           messageTitle.textContent = '❌ Not in Server';
-          messageText.textContent = 'You must be a member of the TwistedXvs Discord server to use this system. Please join the server and try again.';
+          messageText.textContent = 'You must be a member of the TwistedXvs Discord server.';
           break;
         case 'insufficient_permissions':
           messageTitle.textContent = '❌ Insufficient Permissions';
-          messageText.textContent = 'You do not have the required role (Moderator or Admin) to access this system. Please contact the server administrator to request access.';
+          messageText.textContent = 'You need the Moderator or Admin role to access this system.';
           break;
-        case 'auth_failed':
-          messageTitle.textContent = '❌ Authentication Failed';
-          messageText.textContent = 'An error occurred during authentication. Please try again later.';
+        case 'not_authenticated':
+          messageTitle.textContent = '🔐 Login Required';
+          messageText.textContent = 'Please login with Discord to access that page.';
           break;
         default:
-          messageTitle.textContent = '❌ Unknown Error';
-          messageText.textContent = 'An unknown error occurred. Please try again.';
+          messageTitle.textContent = '❌ Error';
+          messageText.textContent = 'An error occurred. Please try again.';
       }
       
-      // Clear the error from URL after 10 seconds
+      // Clear error from URL
       setTimeout(() => {
         window.history.replaceState({}, document.title, '/');
       }, 10000);
-    }
-    
-    // Show OBS overlay info
-    function showOBSInfo() {
-      const baseUrl = 'https://killfeed-r756.onrender.com';
-      
-      const message = `OBS Browser Source URLs:
-
-📊 Counters Overlay:
-${baseUrl}/obs-overlay.html
-
-📢 Message Overlay:
-${baseUrl}/obs-message.html
-
-🎉 Celebration Overlay:
-${baseUrl}/obs-celebration.html
-
-Add these as Browser Sources in OBS:
-- Width: 1920
-- Height: 1080
-- Check "Shutdown source when not visible"
-
-Note: These overlays are public and do not require authentication.`;
-      
-      alert(message);
     }
   </script>
 </body>

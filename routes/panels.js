@@ -4,6 +4,12 @@ const router = express.Router();
 const path = require('path');
 const { requireAdmin, requireModerator } = require('../middleware/auth');
 
+// Dashboard - requires any authentication
+router.get('/dashboard.html', requireModerator, (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/dashboard.html'));
+});
+
+// Other routes...
 router.get('/moderator-panel.html', requireModerator, (req, res) => {
   res.sendFile(path.join(__dirname, '../public/moderator-panel.html'));
 });

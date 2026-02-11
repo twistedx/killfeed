@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Kill Feed System</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    
+    /* Loading Screen */
+    #loadingScreen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      color: white;
+      font-size: 18px;
+    }
+    
+    /* Dashboard Container */
+    #dashboardContent {
+      display: none;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    
+    /* Header */
+    .dashboard-header {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    
+    .welcome-section {
+      flex: 1;
+    }
+    
+    .welcome-title {
+      font-size: 32px;
+      color: #333;
+      margin-bottom: 5px;
+    }
+    
+    .welcome-subtitle {
+      color: #666;
+      font-size: 16px;
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .user-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 3px solid #667eea;
+    }
+    
+    .user-details {
+      text-align: left;
+    }
+    
+    .user-name {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+    
+    .user-role {
+      font-size: 14px;
+      color: #667eea;
+      font-weight: bold;
+    }
+    
+    .logout-btn {
+      padding: 10px 20px;
+      background: #f44336;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+    
+    .logout-btn:hover {
+      transform: translateY(-2px);
+    }
+    
+    /* Quick Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .stat-card {
+      background: white;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    
+    .stat-icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+    
+    .stat-label {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    
+    .stat-value {
+      font-size: 32px;
+      font-weight: bold;
+      color: #333;
+    }
+    
+    /* Action Cards Grid */
+    .actions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 25px;
+    }
+    
+    .action-card {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .action-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+    }
+    
+    .action-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .action-card.admin::before {
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    }
+    
+    .action-card.moderator::before {
+      background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+    }
+    
+    .action-card.obs::before {
+      background: linear-gradient(135deg, #FF5722 0%, #FF9800 100%);
+    }
+    
+    .action-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+    
+    .action-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    
+    .action-description {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+    
+    .action-features {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 15px;
+    }
+    
+    .action-features li {
+      color: #666;
+      padding: 5px 0;
+      font-size: 14px;
+    }
+    
+    .action-features li::before {
+      content: "✓ ";
+      color: #4CAF50;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+    
+    .action-cta {
+      display: inline-block;
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 8px;
+      font-weight: bold;
+      margin-top: 10px;
+      transition: transform 0.2s;
+    }
+    
+    .action-card:hover .action-cta {
+      transform: translateX(5px);
+    }
+    
+    @media (max-width: 768px) {
+      .dashboard-header {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .actions-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div id="loadingScreen">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading your dashboard...</div>
+  </div>
+  
+  <!-- Dashboard Content -->
+  <div id="dashboardContent">
+    <!-- Header -->
+    <div class="dashboard-header">
+      <div class="welcome-section">
+        <div class="welcome-title">Welcome back! 👋</div>
+        <div class="welcome-subtitle" id="welcomeSubtitle">Your stream control center</div>
+      </div>
+      
+      <div class="user-info">
+        <img id="userAvatar" class="user-avatar" src="" alt="Avatar">
+        <div class="user-details">
+          <div class="user-name" id="userName"></div>
+          <div class="user-role" id="userRole"></div>
+        </div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+    
+    <!-- Quick Stats (Admin Only) -->
+    <div class="stats-grid" id="statsGrid" style="display: none;">
+      <div class="stat-card">
+        <div class="stat-icon">🎮</div>
+        <div class="stat-label">Active Moderators</div>
+        <div class="stat-value" id="statModerators">0</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-label">Total Kills</div>
+        <div class="stat-value" id="statKills">0</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-label">Extracted</div>
+        <div class="stat-value" id="statExtracted">0</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">☠️</div>
+        <div class="stat-label">KIA</div>
+        <div class="stat-value" id="statKia">0</div>
+      </div>
+    </div>
+    
+    <!-- Action Cards -->
+    <div class="actions-grid" id="actionsGrid"></div>
+  </div>
+  
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+  
+  <script>
+    const socket = io('https://killfeed-r756.onrender.com');
+    
+    const loadingScreen = document.getElementById('loadingScreen');
+    const dashboardContent = document.getElementById('dashboardContent');
+    const actionsGrid = document.getElementById('actionsGrid');
+    const statsGrid = document.getElementById('statsGrid');
+    
+    let currentUser = null;
+    
+    // Action card templates
+    const actionCards = {
+      moderatorPanel: {
+        icon: '🎮',
+        title: 'Moderator Panel',
+        description: 'Control stream overlays in real-time',
+        features: [
+          'Adjust kill, extracted, and KIA counters',
+          'Update scrolling messages',
+          'Trigger celebration animations',
+          'Real-time sync with OBS'
+        ],
+        cta: 'Open Control Panel',
+        link: '/moderator-panel.html',
+        class: 'moderator',
+        roles: ['moderator', 'admin']
+      },
+      
+      adminPanel: {
+        icon: '👑',
+        title: 'Admin Panel',
+        description: 'Manage moderators and monitor activity',
+        features: [
+          'View connected moderators',
+          'Monitor system activity',
+          'Disconnect users if needed',
+          'Real-time dashboard updates'
+        ],
+        cta: 'Manage System',
+        link: '/admin-panel.html',
+        class: 'admin',
+        roles: ['admin']
+      },
+      
+      configPanel: {
+        icon: '⚙️',
+        title: 'Configuration',
+        description: 'Customize overlay appearance and behavior',
+        features: [
+          'Adjust overlay positions and sizes',
+          'Change colors and themes',
+          'Configure animation settings',
+          'Preview changes live'
+        ],
+        cta: 'Configure Overlays',
+        link: '/config-panel.html',
+        class: 'admin',
+        roles: ['admin']
+      },
+      
+      obsOverlays: {
+        icon: '📺',
+        title: 'OBS Browser Sources',
+        description: 'Get URLs for your streaming software',
+        features: [
+          'Counters overlay (kills, extracted, KIA)',
+          'Scrolling message banner',
+          'Celebration animations',
+          'Copy-paste ready URLs'
+        ],
+        cta: 'View OBS URLs',
+        link: '#',
+        class: 'obs',
+        roles: ['moderator', 'admin'],
+        onClick: 'showOBSInfo()'
+      }
+    };
+    
+    // Check authentication
+    async function checkAuth() {
+      try {
+        const response = await fetch('/auth/user');
+        
+        if (!response.ok) {
+          window.location.href = '/?error=not_authenticated';
+          return;
+        }
+        
+        currentUser = await response.json();
+        
+        // Load dashboard
+        loadDashboard();
+        
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        window.location.href = '/?error=auth_check_failed';
+      }
+    }
+    
+    function loadDashboard() {
+      // Set user info
+      document.getElementById('userName').textContent = `${currentUser.username}#${currentUser.discriminator}`;
+      
+      if (currentUser.isAdmin) {
+        document.getElementById('userRole').textContent = '👑 Administrator';
+        document.getElementById('welcomeSubtitle').textContent = 'Full system access';
+      } else if (currentUser.isModerator) {
+        document.getElementById('userRole').textContent = '🎮 Moderator';
+        document.getElementById('welcomeSubtitle').textContent = 'Stream control access';
+      }
+      
+      // Set avatar
+      if (currentUser.avatar) {
+        document.getElementById('userAvatar').src = `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png`;
+      } else {
+        document.getElementById('userAvatar').src = `https://cdn.discordapp.com/embed/avatars/${parseInt(currentUser.discriminator) % 5}.png`;
+      }
+      
+      // Show stats for admins
+      if (currentUser.isAdmin) {
+        statsGrid.style.display = 'grid';
+      }
+      
+      // Load action cards based on role
+      loadActionCards();
+      
+      // Show dashboard
+      loadingScreen.style.display = 'none';
+      dashboardContent.style.display = 'block';
+    }
+    
+    function loadActionCards() {
+      actionsGrid.innerHTML = '';
+      
+      Object.entries(actionCards).forEach(([key, card]) => {
+        // Check if user has required role
+        const hasAccess = card.roles.some(role => {
+          if (role === 'admin') return currentUser.isAdmin;
+          if (role === 'moderator') return currentUser.isModerator || currentUser.isAdmin;
+          return false;
+        });
+        
+        if (!hasAccess) return;
+        
+        const cardEl = document.createElement('a');
+        cardEl.className = `action-card ${card.class}`;
+        cardEl.href = card.link;
+        
+        if (card.onClick) {
+          cardEl.onclick = (e) => {
+            e.preventDefault();
+            eval(card.onClick);
+          };
+        }
+        
+        cardEl.innerHTML = `
+          <div class="action-icon">${card.icon}</div>
+          <div class="action-title">${card.title}</div>
+          <div class="action-description">${card.description}</div>
+          <ul class="action-features">
+            ${card.features.map(f => `<li>${f}</li>`).join('')}
+          </ul>
+          <span class="action-cta">${card.cta} →</span>
+        `;
+        
+        actionsGrid.appendChild(cardEl);
+      });
+    }
+    
+    // Socket events for stats
+    socket.on('countersUpdate', (counters) => {
+      document.getElementById('statKills').textContent = counters.kills || 0;
+      document.getElementById('statExtracted').textContent = counters.extracted || 0;
+      document.getElementById('statKia').textContent = counters.kia || 0;
+    });
+    
+    socket.on('approvedModeratorsUpdate', (mods) => {
+      document.getElementById('statModerators').textContent = mods.length;
+    });
+    
+    // Show OBS info
+    function showOBSInfo() {
+      const baseUrl = 'https://killfeed-r756.onrender.com';
+      
+      const message = `OBS Browser Source URLs:
+
+📊 Counters Overlay:
+${baseUrl}/obs-overlay.html
+
+📢 Message Overlay:
+${baseUrl}/obs-message.html
+
+🎉 Celebration Overlay:
+${baseUrl}/obs-celebration.html
+
+Add these as Browser Sources in OBS:
+- Width: 1920
+- Height: 1080
+- Check "Shutdown source when not visible"`;
+      
+      alert(message);
+    }
+    
+    // Logout
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        window.location.href = '/auth/logout';
+      }
+    }
+    
+    // Check auth on load
+    checkAuth();
+  </script>
+</body>
+</html>
