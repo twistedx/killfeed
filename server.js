@@ -69,7 +69,7 @@ const socketHandlers = require('./socket/handlers');
 socketHandlers(io);
 
 // Bot verification
-const { verifyBotToken } = require('./utils/botStartup');
+const { verifyBotToken } = require('./utils/botstartup');
 
 async function startServer(retries = 3) {
   // Display Discord configuration
