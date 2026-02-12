@@ -78,18 +78,18 @@ module.exports = (io, sessionMiddleware) => {
   
   // Socket.IO connection handler
   io.on('connection', (socket) => {
-    console.log('Client connected:', socket.id);
-    
     // Get user from session
     const session = socket.request.session;
     const user = session?.user;
     
     if (user) {
       socket.user = user;
-      console.log(`Authenticated user connected: ${user.username}`);
+      console.log(`✅ Authenticated: ${user.username} (${user.isAdmin ? 'Admin' : 'Moderator'})`);
+    } else {
+      console.log(`📺 OBS Overlay connected: ${socket.id}`);
     }
 
-    // Send current state to all clients
+    // Send current state to all clients (authenticated or not)
     socket.emit('configUpdate', overlayConfigs.default);
     socket.emit('countersUpdate', counters);
     socket.emit('messageUpdate', message);
@@ -98,7 +98,6 @@ module.exports = (io, sessionMiddleware) => {
     if (socket.user) {
       if (socket.user.isAdmin) {
         adminSockets.add(socket.id);
-        console.log(`Admin connected: ${socket.user.username}`);
       }
       
       if (socket.user.isModerator || socket.user.isAdmin) {
@@ -115,8 +114,6 @@ module.exports = (io, sessionMiddleware) => {
           io.to(adminId).emit('approvedModeratorsUpdate', Object.values(approvedModerators));
         });
       }
-    } else {
-      console.log('Unauthenticated client connected');
     }
 
     const isAdmin = (socketId) => adminSockets.has(socketId);
@@ -230,10 +227,8 @@ module.exports = (io, sessionMiddleware) => {
 
     // Disconnect
     socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
-      
       if (approvedModerators[socket.id]) {
-        console.log(`${approvedModerators[socket.id].name} disconnected`);
+        console.log(`👋 ${approvedModerators[socket.id].name} disconnected`);
         delete approvedModerators[socket.id];
         
         adminSockets.forEach(adminId => {
@@ -243,7 +238,10 @@ module.exports = (io, sessionMiddleware) => {
       
       if (adminSockets.has(socket.id)) {
         adminSockets.delete(socket.id);
-        console.log('Admin disconnected');
+      }
+      
+      if (!socket.user) {
+        console.log(`📺 OBS Overlay disconnected: ${socket.id}`);
       }
     });
   });
