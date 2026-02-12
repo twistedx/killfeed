@@ -68,9 +68,16 @@ function saveConfig(config) {
 }
 
 module.exports = (io, sessionMiddleware) => {
-  // Convert Express middleware to Socket.IO middleware
+  // Convert Express middleware to Socket.IO middleware with error handling
   const wrap = middleware => (socket, next) => {
-    middleware(socket.request, {}, next);
+    middleware(socket.request, {}, (err) => {
+      if (err) {
+        console.error('Socket.IO session middleware error:', err);
+        // Continue anyway - unauthenticated connections are allowed
+        return next();
+      }
+      next();
+    });
   };
   
   // Use session middleware for Socket.IO
