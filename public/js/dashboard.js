@@ -93,6 +93,21 @@ console.log('Connecting to:', SERVER_URL);
       console.log('Current URL:', window.location.href);
       console.log('Cookies:', document.cookie);
       
+      // Check if session cookie exists before making API call
+      const hasSessionCookie = document.cookie.split(';').some(cookie => {
+        return cookie.trim().startsWith('killfeed.sid=');
+      });
+      
+      if (!hasSessionCookie) {
+        console.log('❌ No session cookie found');
+        console.log('Redirecting to login without API call');
+        console.log('==========================================\n');
+        window.location.href = '/?error=not_authenticated';
+        return;
+      }
+      
+      console.log('✅ Session cookie found, verifying with server...');
+      
       try {
         console.log('Making fetch request to /auth/user...');
         const response = await fetch('/auth/user', {

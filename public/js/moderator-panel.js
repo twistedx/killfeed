@@ -29,8 +29,21 @@ console.log('Connecting to:', SERVER_URL);
     
     // Check authentication on page load
     async function checkAuth() {
+      // Check if session cookie exists before making API call
+      const hasSessionCookie = document.cookie.split(';').some(cookie => {
+        return cookie.trim().startsWith('killfeed.sid=');
+      });
+      
+      if (!hasSessionCookie) {
+        console.log('No session cookie found, redirecting to login');
+        window.location.href = '/?error=not_authenticated';
+        return;
+      }
+      
       try {
-        const response = await fetch('/auth/user');
+        const response = await fetch('/auth/user', {
+          credentials: 'include'
+        });
         
         if (!response.ok) {
           // Not authenticated - redirect to home
