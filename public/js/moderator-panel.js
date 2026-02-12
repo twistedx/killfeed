@@ -1,4 +1,4 @@
-    // Auto-detect server URL (works in dev and production)
+// Auto-detect server URL (works in dev and production)
 const SERVER_URL = window.location.origin;
 const socket = io(SERVER_URL);
 console.log('Connecting to:', SERVER_URL);
@@ -85,6 +85,57 @@ console.log('Connecting to:', SERVER_URL);
       console.log('Disconnected from server');
       if (isAuthenticated) {
         statusIndicator.classList.add('disconnected');
+      }
+    });
+    
+    // Listen for config updates to get custom labels
+    socket.on('configUpdate', (config) => {
+      if (!isAuthenticated) return;
+      console.log('Config update received:', config);
+      
+      // Update counter labels if custom labels are set
+      if (config.counters && config.counters.labels) {
+        const killsLabelEl = document.getElementById('killsLabelDisplay');
+        const extractedLabelEl = document.getElementById('extractedLabelDisplay');
+        const kiaLabelEl = document.getElementById('kiaLabelDisplay');
+        
+        if (killsLabelEl) {
+          killsLabelEl.textContent = '💀 ' + (config.counters.labels.kills || 'Kills');
+        }
+        if (extractedLabelEl) {
+          extractedLabelEl.textContent = '✅ ' + (config.counters.labels.extracted || 'Extracted');
+        }
+        if (kiaLabelEl) {
+          kiaLabelEl.textContent = '☠️ ' + (config.counters.labels.kia || 'KIA');
+        }
+      }
+      
+      // Update counter colors if custom colors are set
+      if (config.counters && config.counters.style) {
+        const killsItem = document.querySelector('.counter-item.kills');
+        const extractedItem = document.querySelector('.counter-item.extracted');
+        const kiaItem = document.querySelector('.counter-item.kia');
+        
+        if (killsItem && config.counters.style.kills) {
+          const killsValue = killsItem.querySelector('.counter-value');
+          if (killsValue) {
+            killsValue.style.color = config.counters.style.kills.color || '#4CAF50';
+          }
+        }
+        
+        if (extractedItem && config.counters.style.extracted) {
+          const extractedValue = extractedItem.querySelector('.counter-value');
+          if (extractedValue) {
+            extractedValue.style.color = config.counters.style.extracted.color || '#FFC107';
+          }
+        }
+        
+        if (kiaItem && config.counters.style.kia) {
+          const kiaValue = kiaItem.querySelector('.counter-value');
+          if (kiaValue) {
+            kiaValue.style.color = config.counters.style.kia.color || '#F44336';
+          }
+        }
       }
     });
     

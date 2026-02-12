@@ -88,8 +88,27 @@ function applyConfigToUI(config) {
     // Colors
     if (config.counters.style) {
       document.getElementById('killsColor').value = config.counters.style.kills?.color || '#4CAF50';
+      document.getElementById('killsColorHex').value = config.counters.style.kills?.color || '#4CAF50';
       document.getElementById('extractedColor').value = config.counters.style.extracted?.color || '#FFC107';
+      document.getElementById('extractedColorHex').value = config.counters.style.extracted?.color || '#FFC107';
       document.getElementById('kiaColor').value = config.counters.style.kia?.color || '#F44336';
+      document.getElementById('kiaColorHex').value = config.counters.style.kia?.color || '#F44336';
+      
+      // Update previews
+      updateCounterPreview('kills', config.counters.style.kills?.color || '#4CAF50');
+      updateCounterPreview('extracted', config.counters.style.extracted?.color || '#FFC107');
+      updateCounterPreview('kia', config.counters.style.kia?.color || '#F44336');
+    }
+    
+    // Labels
+    if (config.counters.labels) {
+      const killsLabelInput = document.getElementById('killsLabel');
+      const extractedLabelInput = document.getElementById('extractedLabel');
+      const kiaLabelInput = document.getElementById('kiaLabel');
+      
+      if (killsLabelInput) killsLabelInput.value = config.counters.labels.kills || 'Kills';
+      if (extractedLabelInput) extractedLabelInput.value = config.counters.labels.extracted || 'Extracted';
+      if (kiaLabelInput) kiaLabelInput.value = config.counters.labels.kia || 'KIA';
     }
   }
 
@@ -126,6 +145,11 @@ function buildConfigFromUI() {
       position: { preset: activePosition?.dataset.pos || 'bottom-left' },
       layout: document.getElementById('counterLayout').value,
       size: activeSize?.dataset.size || 'medium',
+      labels: {
+        kills: document.getElementById('killsLabel')?.value || 'Kills',
+        extracted: document.getElementById('extractedLabel')?.value || 'Extracted',
+        kia: document.getElementById('kiaLabel')?.value || 'KIA'
+      },
       style: {
         kills: { 
           color: document.getElementById('killsColor').value,
@@ -222,6 +246,141 @@ document.querySelectorAll('.size-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+  });
+});
+
+// ===== COLOR CONFIGURATOR =====
+
+// Update preview when color changes
+function updateCounterPreview(type, color) {
+  const preview = document.querySelector(`.${type}-preview`);
+  if (preview) {
+    preview.style.borderColor = color;
+    const valueEl = preview.querySelector('.preview-value');
+    if (valueEl) {
+      valueEl.style.color = color;
+    }
+  }
+}
+
+// Sync color picker and hex input
+function setupColorSync(colorId, hexId, previewType) {
+  const colorInput = document.getElementById(colorId);
+  const hexInput = document.getElementById(hexId);
+  
+  if (!colorInput || !hexInput) return;
+  
+  // Color picker changes hex input
+  colorInput.addEventListener('input', (e) => {
+    const color = e.target.value.toUpperCase();
+    hexInput.value = color;
+    updateCounterPreview(previewType, color);
+  });
+  
+  // Hex input changes color picker
+  hexInput.addEventListener('input', (e) => {
+    let hex = e.target.value.trim();
+    
+    // Add # if missing
+    if (hex && !hex.startsWith('#')) {
+      hex = '#' + hex;
+    }
+    
+    // Validate hex color
+    if (/^#[0-9A-F]{6}$/i.test(hex)) {
+      colorInput.value = hex;
+      updateCounterPreview(previewType, hex);
+    }
+  });
+  
+  // Format on blur
+  hexInput.addEventListener('blur', (e) => {
+    let hex = e.target.value.trim();
+    if (hex && !hex.startsWith('#')) {
+      hex = '#' + hex;
+    }
+    if (/^#[0-9A-F]{6}$/i.test(hex)) {
+      hexInput.value = hex.toUpperCase();
+    } else {
+      // Reset to color picker value if invalid
+      hexInput.value = colorInput.value.toUpperCase();
+    }
+  });
+}
+
+// Setup color sync for all counters
+setupColorSync('killsColor', 'killsColorHex', 'kills');
+setupColorSync('extractedColor', 'extractedColorHex', 'extracted');
+setupColorSync('kiaColor', 'kiaColorHex', 'kia');
+
+// Preset swatch buttons
+document.querySelectorAll('.preset-swatch').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.target;
+    const color = btn.dataset.color;
+    
+    // Update color picker
+    const colorInput = document.getElementById(`${target}Color`);
+    const hexInput = document.getElementById(`${target}ColorHex`);
+    
+    if (colorInput) colorInput.value = color;
+    if (hexInput) hexInput.value = color;
+    
+    // Update preview
+    updateCounterPreview(target, color);
+    
+    // Visual feedback
+    btn.style.transform = 'scale(0.9)';
+    setTimeout(() => btn.style.transform = '', 200);
+  });
+});
+
+// Reset buttons
+document.querySelectorAll('.color-preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const defaultColor = btn.dataset.color;
+    const group = btn.closest('.counter-config-item');
+    const colorInput = group.querySelector('input[type="color"]');
+    const hexInput = group.querySelector('.color-hex');
+    const preview = group.querySelector('.counter-preview');
+    
+    if (colorInput) colorInput.value = defaultColor;
+    if (hexInput) hexInput.value = defaultColor;
+    
+    // Update preview border
+    if (preview) {
+      preview.style.borderColor = defaultColor;
+      const valueEl = preview.querySelector('.preview-value');
+      if (valueEl) valueEl.style.color = defaultColor;
+    }
+  });
+});
+
+// Label input handlers
+document.querySelectorAll('.preview-label-input').forEach(input => {
+  // Auto-select text on focus
+  input.addEventListener('focus', (e) => {
+    e.target.select();
+  });
+  
+  // Prevent empty labels
+  input.addEventListener('blur', (e) => {
+    if (!e.target.value.trim()) {
+      // Reset to default based on ID
+      if (e.target.id === 'killsLabel') e.target.value = 'Kills';
+      if (e.target.id === 'extractedLabel') e.target.value = 'Extracted';
+      if (e.target.id === 'kiaLabel') e.target.value = 'KIA';
+    }
+  });
+  
+  // Visual feedback when typing
+  input.addEventListener('input', (e) => {
+    const value = e.target.value.trim();
+    if (value.length >= 15) {
+      e.target.style.color = '#FFC107'; // Warning color
+    } else {
+      e.target.style.color = '';
+    }
   });
 });
 

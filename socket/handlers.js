@@ -22,6 +22,11 @@ function getDefaultConfig() {
       position: { x: 20, y: 20 },
       layout: 'horizontal',
       size: 'medium',
+      labels: {
+        kills: 'Kills',
+        extracted: 'Extracted',
+        kia: 'KIA'
+      },
       style: {
         kills: { color: '#4CAF50', borderColor: '#4CAF50' },
         extracted: { color: '#FFC107', borderColor: '#FFC107' },

@@ -86,20 +86,87 @@
           </div>
 
           <div class="form-group">
-            <label>Counter Colors</label>
-            <div class="color-group">
-              <div class="color-input">
-                <span>💀 Kills</span>
-                <input type="color" id="killsColor" value="#4CAF50">
+            <label>Counter Colors & Preview</label>
+            <div class="color-configurator">
+              
+              <!-- Kills Counter -->
+              <div class="counter-config-item">
+                <div class="counter-preview kills-preview">
+                  <div class="preview-icon">💀</div>
+                  <div class="preview-info">
+                    <input type="text" class="preview-label-input" id="killsLabel" value="Kills" maxlength="20" placeholder="Counter Label">
+                    <div class="preview-value">0</div>
+                  </div>
+                </div>
+                <div class="color-controls">
+                  <label>Border & Text Color</label>
+                  <div class="color-picker-group">
+                    <input type="color" id="killsColor" value="#4CAF50">
+                    <input type="text" class="color-hex" id="killsColorHex" value="#4CAF50" maxlength="7">
+                    <button class="color-preset-btn" data-color="#4CAF50">Reset</button>
+                  </div>
+                  <div class="color-presets">
+                    <button class="preset-swatch" data-target="kills" data-color="#4CAF50" style="background: #4CAF50" title="Green"></button>
+                    <button class="preset-swatch" data-target="kills" data-color="#00E676" style="background: #00E676" title="Bright Green"></button>
+                    <button class="preset-swatch" data-target="kills" data-color="#76FF03" style="background: #76FF03" title="Lime"></button>
+                    <button class="preset-swatch" data-target="kills" data-color="#00BCD4" style="background: #00BCD4" title="Cyan"></button>
+                    <button class="preset-swatch" data-target="kills" data-color="#2196F3" style="background: #2196F3" title="Blue"></button>
+                  </div>
+                </div>
               </div>
-              <div class="color-input">
-                <span>✅ Extracted</span>
-                <input type="color" id="extractedColor" value="#FFC107">
+
+              <!-- Extracted Counter -->
+              <div class="counter-config-item">
+                <div class="counter-preview extracted-preview">
+                  <div class="preview-icon">✅</div>
+                  <div class="preview-info">
+                    <input type="text" class="preview-label-input" id="extractedLabel" value="Extracted" maxlength="20" placeholder="Counter Label">
+                    <div class="preview-value">0</div>
+                  </div>
+                </div>
+                <div class="color-controls">
+                  <label>Border & Text Color</label>
+                  <div class="color-picker-group">
+                    <input type="color" id="extractedColor" value="#FFC107">
+                    <input type="text" class="color-hex" id="extractedColorHex" value="#FFC107" maxlength="7">
+                    <button class="color-preset-btn" data-color="#FFC107">Reset</button>
+                  </div>
+                  <div class="color-presets">
+                    <button class="preset-swatch" data-target="extracted" data-color="#FFC107" style="background: #FFC107" title="Amber"></button>
+                    <button class="preset-swatch" data-target="extracted" data-color="#FFEB3B" style="background: #FFEB3B" title="Yellow"></button>
+                    <button class="preset-swatch" data-target="extracted" data-color="#FF9800" style="background: #FF9800" title="Orange"></button>
+                    <button class="preset-swatch" data-target="extracted" data-color="#FFD700" style="background: #FFD700" title="Gold"></button>
+                    <button class="preset-swatch" data-target="extracted" data-color="#FFA726" style="background: #FFA726" title="Light Orange"></button>
+                  </div>
+                </div>
               </div>
-              <div class="color-input">
-                <span>☠️ KIA</span>
-                <input type="color" id="kiaColor" value="#F44336">
+
+              <!-- KIA Counter -->
+              <div class="counter-config-item">
+                <div class="counter-preview kia-preview">
+                  <div class="preview-icon">☠️</div>
+                  <div class="preview-info">
+                    <input type="text" class="preview-label-input" id="kiaLabel" value="KIA" maxlength="20" placeholder="Counter Label">
+                    <div class="preview-value">0</div>
+                  </div>
+                </div>
+                <div class="color-controls">
+                  <label>Border & Text Color</label>
+                  <div class="color-picker-group">
+                    <input type="color" id="kiaColor" value="#F44336">
+                    <input type="text" class="color-hex" id="kiaColorHex" value="#F44336" maxlength="7">
+                    <button class="color-preset-btn" data-color="#F44336">Reset</button>
+                  </div>
+                  <div class="color-presets">
+                    <button class="preset-swatch" data-target="kia" data-color="#F44336" style="background: #F44336" title="Red"></button>
+                    <button class="preset-swatch" data-target="kia" data-color="#E91E63" style="background: #E91E63" title="Pink"></button>
+                    <button class="preset-swatch" data-target="kia" data-color="#FF5252" style="background: #FF5252" title="Bright Red"></button>
+                    <button class="preset-swatch" data-target="kia" data-color="#D32F2F" style="background: #D32F2F" title="Dark Red"></button>
+                    <button class="preset-swatch" data-target="kia" data-color="#FF1744" style="background: #FF1744" title="Crimson"></button>
+                  </div>
+                </div>
               </div>
+
             </div>
           </div>
         </div>

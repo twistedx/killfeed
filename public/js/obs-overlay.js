@@ -63,6 +63,17 @@ function applyCounterConfig(counterConfig) {
     countersContainer.style.top = counterConfig.position.y + 'px';
   }
   
+  // Apply labels if they exist
+  if (counterConfig.labels) {
+    const killsLabelEl = document.querySelector('.counter.kills .counter-label');
+    const extractedLabelEl = document.querySelector('.counter.extracted .counter-label');
+    const kiaLabelEl = document.querySelector('.counter.kia .counter-label');
+    
+    if (killsLabelEl) killsLabelEl.textContent = counterConfig.labels.kills || 'Kills';
+    if (extractedLabelEl) extractedLabelEl.textContent = counterConfig.labels.extracted || 'Extracted';
+    if (kiaLabelEl) kiaLabelEl.textContent = counterConfig.labels.kia || 'KIA';
+  }
+  
   // Apply colors
   if (counterConfig.style) {
     const killsCounter = document.querySelector('.counter.kills');
