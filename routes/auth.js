@@ -102,20 +102,26 @@ router.get('/discord/callback', async (req, res) => {
       sharedGuilds: permissions.sharedGuilds
     };
 
-    sessionStore.set(req.session.id, req.session);
+    // Save session before redirect
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.redirect('/?error=session_save_failed');
+      }
 
-    console.log(`✅ Session created for ${userData.username}`);
-    console.log(`==========================================\n`);
+      console.log(`✅ Session created for ${userData.username}`);
+      console.log(`==========================================\n`);
 
-    // Redirect based on role
-    if (permissions.isAdmin) {
-      return res.redirect('/dashboard.html');
-    }
-    if (permissions.isModerator) {
-      return res.redirect('/dashboard.html');
-    }
+      // Redirect based on role
+      if (permissions.isAdmin) {
+        return res.redirect('/dashboard.html');
+      }
+      if (permissions.isModerator) {
+        return res.redirect('/dashboard.html');
+      }
 
-    return res.redirect('/?error=insufficient_permissions');
+      return res.redirect('/?error=insufficient_permissions');
+    });
 
   } catch (err) {
     console.error('Auth error:', err);
