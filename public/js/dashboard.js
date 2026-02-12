@@ -1,6 +1,12 @@
-    // Auto-detect server URL (works in dev and production)
+// Auto-detect server URL (works in dev and production)
 const SERVER_URL = window.location.origin;
-const socket = io(SERVER_URL);
+const socket = io(SERVER_URL, {
+  transports: ['websocket', 'polling'],
+  reconnection: true,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 5000,
+  reconnectionAttempts: 5
+});
 console.log('Connecting to:', SERVER_URL);
     
     const loadingScreen = document.getElementById('loadingScreen');
@@ -80,21 +86,47 @@ console.log('Connecting to:', SERVER_URL);
     
     // Check authentication
     async function checkAuth() {
+      console.log('\n========================================');
+      console.log('📊 DASHBOARD AUTH CHECK');
+      console.log('========================================');
+      console.log('Time:', new Date().toISOString());
+      console.log('Current URL:', window.location.href);
+      console.log('Cookies:', document.cookie);
+      
       try {
-        const response = await fetch('/auth/user');
+        console.log('Making fetch request to /auth/user...');
+        const response = await fetch('/auth/user', {
+          credentials: 'include' // Ensure cookies are sent
+        });
+        
+        console.log('Response status:', response.status);
+        console.log('Response headers:', [...response.headers.entries()]);
         
         if (!response.ok) {
+          console.log('❌ Auth check failed - not authenticated');
+          console.log('Redirecting to /?error=not_authenticated');
+          console.log('==========================================\n');
           window.location.href = '/?error=not_authenticated';
           return;
         }
         
         currentUser = await response.json();
+        console.log('✅ Auth successful!');
+        console.log('User:', currentUser.username);
+        console.log('Admin:', currentUser.isAdmin);
+        console.log('Moderator:', currentUser.isModerator);
+        console.log('Loading dashboard...');
+        console.log('==========================================\n');
         
         // Load dashboard
         loadDashboard();
         
       } catch (error) {
-        console.error('Auth check failed:', error);
+        console.error('❌ Auth check exception:', error);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+        console.log('Redirecting to /?error=auth_check_failed');
+        console.log('==========================================\n');
         window.location.href = '/?error=auth_check_failed';
       }
     }

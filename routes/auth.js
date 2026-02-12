@@ -23,13 +23,25 @@ router.get('/discord', (req, res) => {
 
 // OAuth Callback
 router.get('/discord/callback', async (req, res) => {
+  console.log('\n========================================');
+  console.log('📥 OAUTH CALLBACK RECEIVED');
+  console.log('========================================');
+  console.log('Time:', new Date().toISOString());
+  console.log('Query params:', req.query);
+  console.log('Session ID:', req.sessionID);
+  console.log('Cookies received:', req.headers.cookie);
+  
   const { code } = req.query;
 
   if (!code) {
+    console.error('❌ No authorization code received');
     return res.redirect('/?error=no_code');
   }
 
+  console.log('✅ Authorization code received:', code.substring(0, 10) + '...');
+
   try {
+    console.log('\n--- Step 1: Exchange code for token ---');
     // Exchange code for access token
     const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
@@ -46,23 +58,29 @@ router.get('/discord/callback', async (req, res) => {
     const tokenData = await tokenResponse.json();
     
     if (!tokenData.access_token) {
-      console.error('Token exchange failed:', tokenData);
+      console.error('❌ Token exchange failed:', tokenData);
       return res.redirect('/?error=token_failed');
     }
 
+    console.log('✅ Token received, expires in:', tokenData.expires_in, 'seconds');
+
+    console.log('\n--- Step 2: Fetch user data ---');
     // Get user info
     const userResponse = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
     const userData = await userResponse.json();
 
+    console.log('✅ User data received:', userData.username, '#', userData.discriminator || '0');
+    console.log('User ID:', userData.id);
     console.log(`\n=== Auth Request for ${userData.username}#${userData.discriminator} ===`);
 
+    console.log('\n--- Step 3: Check permissions ---');
     // Check user permissions across all shared guilds
     const permissions = await checkUserPermissions(tokenData.access_token, userData.id);
     
     if (permissions.error) {
-      console.error(`Permission check error: ${permissions.error}`);
+      console.error(`❌ Permission check error: ${permissions.error}`);
       
       if (permissions.error === 'no_shared_guilds') {
         return res.redirect('/?error=not_in_server');
@@ -91,6 +109,7 @@ router.get('/discord/callback', async (req, res) => {
       console.log(`   - ${guild.guildName}: Admin=${guild.isAdmin}, Mod=${guild.isModerator}`);
     });
 
+    console.log('\n--- Step 4: Create session ---');
     // Create session
     req.session.user = {
       id: userData.id,
@@ -102,29 +121,45 @@ router.get('/discord/callback', async (req, res) => {
       sharedGuilds: permissions.sharedGuilds
     };
 
+    console.log('Session object created:', {
+      username: req.session.user.username,
+      isAdmin: req.session.user.isAdmin,
+      isModerator: req.session.user.isModerator,
+      sessionID: req.sessionID
+    });
+
+    console.log('\n--- Step 5: Save session to store ---');
     // Save session before redirect
     req.session.save((err) => {
       if (err) {
-        console.error('Session save error:', err);
+        console.error('❌ Session save error:', err);
+        console.error('Error stack:', err.stack);
         return res.redirect('/?error=session_save_failed');
       }
 
-      console.log(`✅ Session created for ${userData.username}`);
+      console.log('✅ Session saved successfully!');
+      console.log('Session ID:', req.sessionID);
+      console.log('Session cookie name: killfeed.sid');
+      console.log('Session data:', {
+        user: req.session.user.username,
+        isAdmin: req.session.user.isAdmin,
+        cookie: req.session.cookie
+      });
+
+      console.log('\n--- Step 6: Set cookie and redirect ---');
+      const redirectUrl = '/dashboard.html';
+      console.log('Redirecting to:', redirectUrl);
+      console.log('Cookie should be set in response headers');
       console.log(`==========================================\n`);
-
-      // Redirect based on role
-      if (permissions.isAdmin) {
-        return res.redirect('/dashboard.html');
-      }
-      if (permissions.isModerator) {
-        return res.redirect('/dashboard.html');
-      }
-
-      return res.redirect('/?error=insufficient_permissions');
+      
+      return res.redirect(redirectUrl);
     });
 
   } catch (err) {
-    console.error('Auth error:', err);
+    console.error('\n❌ OAUTH ERROR:', err);
+    console.error('Error message:', err.message);
+    console.error('Error stack:', err.stack);
+    console.log('==========================================\n');
     res.redirect('/?error=auth_failed');
   }
 });
@@ -140,9 +175,38 @@ router.get('/logout', (req, res) => {
 
 // Get user
 router.get('/user', (req, res) => {
+  console.log('\n========================================');
+  console.log('🔍 AUTH CHECK REQUEST');
+  console.log('========================================');
+  console.log('Time:', new Date().toISOString());
+  console.log('Path:', req.path);
+  console.log('Session ID:', req.sessionID);
+  console.log('Cookies received:', req.headers.cookie);
+  console.log('Session exists:', !!req.session);
+  console.log('Session.user exists:', !!req.session?.user);
+  
+  if (req.session) {
+    console.log('Session details:', {
+      id: req.session.id,
+      cookie: req.session.cookie,
+      user: req.session.user ? {
+        username: req.session.user.username,
+        isAdmin: req.session.user.isAdmin,
+        isModerator: req.session.user.isModerator
+      } : null
+    });
+  }
+  
   if (req.session?.user) {
+    console.log('✅ User authenticated:', req.session.user.username);
+    console.log('Returning user data to client');
+    console.log('==========================================\n');
     res.json(req.session.user);
   } else {
+    console.log('❌ User not authenticated');
+    console.log('Reason:', !req.session ? 'No session' : 'No user in session');
+    console.log('Returning 401');
+    console.log('==========================================\n');
     res.status(401).json({ error: 'Not authenticated' });
   }
 });
