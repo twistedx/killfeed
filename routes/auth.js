@@ -1,3 +1,4 @@
+// routes/auth.js
 const express = require('express');
 const router = express.Router();
 const fetch = require('node-fetch');
@@ -5,19 +6,18 @@ const fetch = require('node-fetch');
 const {
   CLIENT_ID,
   CLIENT_SECRET,
-  REDIRECT_URI,
-  SERVER_ID
+  REDIRECT_URI
 } = require('../config/discord');
 
-const { getUserPermissions } = require('../utils/roles');
-const { getMemberViaBot } = require('../utils/bot');
+const { checkUserPermissions } = require('../utils/permissions');
 
 // Create session store
 const sessionStore = new Map();
 
 // Initiate OAuth
 router.get('/discord', (req, res) => {
-  const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds.members.read`;
+  // Request guilds scope to check user's servers
+  const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds`;
   res.redirect(authUrl);
 });
 
@@ -30,6 +30,7 @@ router.get('/discord/callback', async (req, res) => {
   }
 
   try {
+    // Exchange code for access token
     const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -45,53 +46,76 @@ router.get('/discord/callback', async (req, res) => {
     const tokenData = await tokenResponse.json();
     
     if (!tokenData.access_token) {
-      console.error('Token failed:', tokenData);
+      console.error('Token exchange failed:', tokenData);
       return res.redirect('/?error=token_failed');
     }
 
+    // Get user info
     const userResponse = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
     const userData = await userResponse.json();
 
-    const memberResponse = await fetch(`https://discord.com/api/users/@me/guilds/${SERVER_ID}/member`, {
-      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    console.log(`\n=== Auth Request for ${userData.username}#${userData.discriminator} ===`);
+
+    // Check user permissions across all shared guilds
+    const permissions = await checkUserPermissions(tokenData.access_token, userData.id);
+    
+    if (permissions.error) {
+      console.error(`Permission check error: ${permissions.error}`);
+      
+      if (permissions.error === 'no_shared_guilds') {
+        return res.redirect('/?error=not_in_server');
+      }
+      
+      if (permissions.error === 'bot_not_configured') {
+        return res.redirect('/?error=bot_not_configured');
+      }
+      
+      return res.redirect('/?error=permission_check_failed');
+    }
+
+    // Check if user has at least moderator permissions
+    if (!permissions.isModerator && !permissions.isAdmin) {
+      console.log(`❌ User has no management permissions in any shared guild`);
+      return res.redirect('/?error=insufficient_permissions');
+    }
+
+    // Log permission results
+    console.log(`✅ Permission Check Results:`);
+    console.log(`   - Admin: ${permissions.isAdmin}`);
+    console.log(`   - Moderator: ${permissions.isModerator}`);
+    console.log(`   - Shared Guilds: ${permissions.sharedGuilds.length}`);
+    
+    permissions.sharedGuilds.forEach(guild => {
+      console.log(`   - ${guild.guildName}: Admin=${guild.isAdmin}, Mod=${guild.isModerator}`);
     });
 
-    if (memberResponse.status === 404) {
-      return res.redirect('/?error=not_in_server');
-    }
-
-    const memberData = await memberResponse.json();
-
-    const perms = await getUserPermissions(memberData.roles, userData.id);
-    
-    if (perms.error) {
-      return res.redirect(`/?error=${perms.error}`);
-    }
-
+    // Create session
     req.session.user = {
       id: userData.id,
       username: userData.username,
       discriminator: userData.discriminator || '0',
       avatar: userData.avatar,
-      isAdmin: perms.isAdmin,
-      isModerator: perms.isModerator,
+      isAdmin: permissions.isAdmin,
+      isModerator: permissions.isModerator,
+      sharedGuilds: permissions.sharedGuilds
     };
 
     sessionStore.set(req.session.id, req.session);
 
-// Redirect based on role
-if (perms.isAdmin) {
-  console.log('➡️  Redirecting to dashboard');
-  return res.redirect('/dashboard.html');
-}
-if (perms.isModerator) {
-  console.log('➡️  Redirecting to dashboard');
-  return res.redirect('/dashboard.html');
-}
+    console.log(`✅ Session created for ${userData.username}`);
+    console.log(`==========================================\n`);
 
-return res.redirect('/?error=insufficient_permissions');
+    // Redirect based on role
+    if (permissions.isAdmin) {
+      return res.redirect('/dashboard.html');
+    }
+    if (permissions.isModerator) {
+      return res.redirect('/dashboard.html');
+    }
+
+    return res.redirect('/?error=insufficient_permissions');
 
   } catch (err) {
     console.error('Auth error:', err);

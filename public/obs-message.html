@@ -2,7 +2,10 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <style>
+  <link rel="stylesheet" href="/css/obs-message.css">
+</head>
+<!-- Styles moved to /css/obs-message.css -->
+<style style="display:none">
     body {
       margin: 0;
       background: transparent;
@@ -94,7 +97,7 @@
   
   <script>
     // Connect to server
-    const socket = io('https://killfeed-r756.onrender.com');
+    const socket = io(window.location.origin);
     const containerEl = document.getElementById('messageContainer');
     const wrapperEl = document.getElementById('messageWrapper');
     const messageTextEl = document.getElementById('messageText');

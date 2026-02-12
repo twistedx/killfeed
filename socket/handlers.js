@@ -1,11 +1,14 @@
 // socket/handlers.js
-const { sessionStore } = require('../routes/auth');
+const fs = require('fs');
+const path = require('path');
 
 let counters = { kills: 0, extracted: 0, kia: 0 };
 let message = { text: '', visible: false };
-let overlayConfigs = { default: getDefaultConfig() };
+let overlayConfigs = { default: loadConfig() };
 let approvedModerators = {};
 let adminSockets = new Set();
+
+const CONFIG_FILE = path.join(__dirname, '../data/overlay-config.json');
 
 function getDefaultConfig() {
   return {
@@ -37,31 +40,62 @@ function getDefaultConfig() {
   };
 }
 
-module.exports = (io) => {
-  // Socket middleware to attach user from session
-  io.use((socket, next) => {
-    const sessionId = socket.handshake.auth.sessionId;
-    if (sessionId) {
-      const session = sessionStore.get(sessionId);
-      if (session?.user) {
-        socket.user = session.user;
-      }
+function loadConfig() {
+  try {
+    if (fs.existsSync(CONFIG_FILE)) {
+      const data = fs.readFileSync(CONFIG_FILE, 'utf8');
+      console.log('✅ Loaded saved overlay config');
+      return JSON.parse(data);
     }
-    next();
-  });
+  } catch (error) {
+    console.error('Failed to load config:', error);
+  }
+  console.log('📋 Using default overlay config');
+  return getDefaultConfig();
+}
 
+function saveConfig(config) {
+  try {
+    const dir = path.dirname(CONFIG_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
+    console.log('💾 Config saved to disk');
+  } catch (error) {
+    console.error('Failed to save config:', error);
+  }
+}
+
+module.exports = (io, sessionMiddleware) => {
+  // Convert Express middleware to Socket.IO middleware
+  const wrap = middleware => (socket, next) => {
+    middleware(socket.request, {}, next);
+  };
+  
+  // Use session middleware for Socket.IO
+  io.use(wrap(sessionMiddleware));
+  
+  // Socket.IO connection handler
   io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
+    
+    // Get user from session
+    const session = socket.request.session;
+    const user = session?.user;
+    
+    if (user) {
+      socket.user = user;
+      console.log(`Authenticated user connected: ${user.username}`);
+    }
 
-    // Send current state
+    // Send current state to all clients
     socket.emit('configUpdate', overlayConfigs.default);
     socket.emit('countersUpdate', counters);
     socket.emit('messageUpdate', message);
 
     // Handle authenticated users
     if (socket.user) {
-      console.log(`Authenticated user connected: ${socket.user.username}`);
-      
       if (socket.user.isAdmin) {
         adminSockets.add(socket.id);
         console.log(`Admin connected: ${socket.user.username}`);
@@ -81,6 +115,8 @@ module.exports = (io) => {
           io.to(adminId).emit('approvedModeratorsUpdate', Object.values(approvedModerators));
         });
       }
+    } else {
+      console.log('Unauthenticated client connected');
     }
 
     const isAdmin = (socketId) => adminSockets.has(socketId);
@@ -126,7 +162,10 @@ module.exports = (io) => {
 
     // Message events
     socket.on('updateMessage', (newMessage) => {
-      if (!isApproved(socket.id)) return;
+      if (!isApproved(socket.id)) {
+        console.warn(`Unauthorized message update from ${socket.id}`);
+        return;
+      }
       
       console.log(`Message updated by ${approvedModerators[socket.id].name}`);
       message = newMessage;
@@ -161,6 +200,10 @@ module.exports = (io) => {
     });
 
     // Config events (admin only)
+    socket.on('requestConfig', () => {
+      socket.emit('configUpdate', overlayConfigs.default);
+    });
+
     socket.on('updateConfig', (newConfig) => {
       if (!isAdmin(socket.id)) {
         console.warn(`Unauthorized config update from ${socket.id}`);
@@ -169,6 +212,7 @@ module.exports = (io) => {
       
       console.log('Config updated by admin');
       overlayConfigs.default = { ...overlayConfigs.default, ...newConfig };
+      saveConfig(overlayConfigs.default);
       io.emit('configUpdate', overlayConfigs.default);
     });
 
@@ -180,6 +224,7 @@ module.exports = (io) => {
       
       console.log('Config reset by admin');
       overlayConfigs.default = getDefaultConfig();
+      saveConfig(overlayConfigs.default);
       io.emit('configUpdate', overlayConfigs.default);
     });
 

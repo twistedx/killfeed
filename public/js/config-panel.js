@@ -1,0 +1,229 @@
+// js/config-panel.js
+const socket = io(window.location.origin);
+
+const loadingScreen = document.getElementById('loadingScreen');
+const accessDenied = document.getElementById('accessDenied');
+const configPanel = document.getElementById('configPanel');
+
+let isAuthenticated = false;
+let currentConfig = {};
+
+// Check authentication
+async function checkAuth() {
+  try {
+    const response = await fetch('/auth/user');
+    
+    if (!response.ok) {
+      window.location.href = '/?error=not_authenticated';
+      return;
+    }
+    
+    const user = await response.json();
+    
+    if (!user.isAdmin) {
+      loadingScreen.style.display = 'none';
+      accessDenied.style.display = 'block';
+      return;
+    }
+    
+    // User is admin
+    isAuthenticated = true;
+    loadingScreen.style.display = 'none';
+    configPanel.style.display = 'block';
+    
+    // Set user info
+    document.getElementById('adminName').textContent = user.username;
+    const avatarUrl = user.avatar 
+      ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+      : '/default-avatar.png';
+    document.getElementById('adminAvatar').src = avatarUrl;
+    
+    // Set overlay URL
+    document.getElementById('overlayUrl').textContent = 
+      `${window.location.origin}/obs-overlay.html`;
+    
+    // Load current config
+    requestConfig();
+    
+  } catch (error) {
+    console.error('Auth check failed:', error);
+    window.location.href = '/?error=auth_check_failed';
+  }
+}
+
+// Request current config
+function requestConfig() {
+  socket.emit('requestConfig');
+}
+
+// Receive config from server
+socket.on('configUpdate', (config) => {
+  currentConfig = config;
+  applyConfigToUI(config);
+});
+
+// Apply config to UI elements
+function applyConfigToUI(config) {
+  // Counters
+  if (config.counters) {
+    document.getElementById('countersEnabled').checked = config.counters.enabled;
+    document.getElementById('counterLayout').value = config.counters.layout || 'horizontal';
+    
+    // Position buttons
+    document.querySelectorAll('.position-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.dataset.pos === (config.counters.position?.preset || 'bottom-left')) {
+        btn.classList.add('active');
+      }
+    });
+    
+    // Size buttons
+    document.querySelectorAll('.size-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.dataset.size === (config.counters.size || 'medium')) {
+        btn.classList.add('active');
+      }
+    });
+    
+    // Colors
+    if (config.counters.style) {
+      document.getElementById('killsColor').value = config.counters.style.kills?.color || '#4CAF50';
+      document.getElementById('extractedColor').value = config.counters.style.extracted?.color || '#FFC107';
+      document.getElementById('kiaColor').value = config.counters.style.kia?.color || '#F44336';
+    }
+  }
+
+  // Message
+  if (config.message) {
+    document.getElementById('messageEnabled').checked = config.message.enabled;
+    document.getElementById('messagePosition').value = config.message.position || 'bottom';
+    document.getElementById('messageFontSize').value = config.message.fontSize || 32;
+    document.getElementById('fontSizeValue').textContent = (config.message.fontSize || 32) + 'px';
+    document.getElementById('messageColor').value = config.message.color || '#FFC107';
+    document.getElementById('scrollSpeed').value = config.message.scrollSpeed || 15;
+    document.getElementById('scrollSpeedValue').textContent = (config.message.scrollSpeed || 15) + 'px/s';
+  }
+
+  // Celebration
+  if (config.celebration) {
+    document.getElementById('celebrationEnabled').checked = config.celebration.enabled;
+    document.getElementById('celebrationDuration').value = (config.celebration.duration || 5000) / 1000;
+    document.getElementById('durationValue').textContent = ((config.celebration.duration || 5000) / 1000) + 's';
+    document.getElementById('celebrationTextSize').value = config.celebration.textSize || 120;
+    document.getElementById('textSizeValue').textContent = (config.celebration.textSize || 120) + 'px';
+    document.getElementById('effectIntensity').value = config.celebration.effectIntensity || 'normal';
+  }
+}
+
+// Build config from UI
+function buildConfigFromUI() {
+  const activePosition = document.querySelector('.position-btn.active');
+  const activeSize = document.querySelector('.size-btn.active');
+  
+  return {
+    counters: {
+      enabled: document.getElementById('countersEnabled').checked,
+      position: { preset: activePosition?.dataset.pos || 'bottom-left' },
+      layout: document.getElementById('counterLayout').value,
+      size: activeSize?.dataset.size || 'medium',
+      style: {
+        kills: { 
+          color: document.getElementById('killsColor').value,
+          borderColor: document.getElementById('killsColor').value
+        },
+        extracted: { 
+          color: document.getElementById('extractedColor').value,
+          borderColor: document.getElementById('extractedColor').value
+        },
+        kia: { 
+          color: document.getElementById('kiaColor').value,
+          borderColor: document.getElementById('kiaColor').value
+        }
+      }
+    },
+    message: {
+      enabled: document.getElementById('messageEnabled').checked,
+      position: document.getElementById('messagePosition').value,
+      fontSize: parseInt(document.getElementById('messageFontSize').value),
+      color: document.getElementById('messageColor').value,
+      borderColor: document.getElementById('messageColor').value,
+      scrollSpeed: parseInt(document.getElementById('scrollSpeed').value)
+    },
+    celebration: {
+      enabled: document.getElementById('celebrationEnabled').checked,
+      duration: parseInt(document.getElementById('celebrationDuration').value) * 1000,
+      textSize: parseInt(document.getElementById('celebrationTextSize').value),
+      effectIntensity: document.getElementById('effectIntensity').value
+    }
+  };
+}
+
+// Save configuration
+function saveConfig() {
+  const config = buildConfigFromUI();
+  socket.emit('updateConfig', config);
+  
+  // Show success feedback
+  const saveBtn = document.querySelector('.btn-primary');
+  const originalText = saveBtn.innerHTML;
+  saveBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Saved!';
+  saveBtn.style.background = '#4CAF50';
+  
+  setTimeout(() => {
+    saveBtn.innerHTML = originalText;
+    saveBtn.style.background = '';
+  }, 2000);
+}
+
+// Reset configuration
+function resetConfig() {
+  if (confirm('Reset all settings to defaults?')) {
+    socket.emit('resetConfig');
+  }
+}
+
+// Copy URL
+function copyUrl() {
+  const url = document.getElementById('overlayUrl').textContent;
+  navigator.clipboard.writeText(url);
+  
+  const btn = document.querySelector('.btn-copy');
+  btn.textContent = '✓ Copied!';
+  setTimeout(() => btn.textContent = 'Copy URL', 2000);
+}
+
+// Event listeners for real-time updates
+document.getElementById('messageFontSize').addEventListener('input', (e) => {
+  document.getElementById('fontSizeValue').textContent = e.target.value + 'px';
+});
+
+document.getElementById('scrollSpeed').addEventListener('input', (e) => {
+  document.getElementById('scrollSpeedValue').textContent = e.target.value + 'px/s';
+});
+
+document.getElementById('celebrationDuration').addEventListener('input', (e) => {
+  document.getElementById('durationValue').textContent = e.target.value + 's';
+});
+
+document.getElementById('celebrationTextSize').addEventListener('input', (e) => {
+  document.getElementById('textSizeValue').textContent = e.target.value + 'px';
+});
+
+// Position button handlers
+document.querySelectorAll('.position-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.position-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// Size button handlers
+document.querySelectorAll('.size-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// Check auth on page load
+checkAuth();

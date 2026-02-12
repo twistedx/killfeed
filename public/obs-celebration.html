@@ -2,6 +2,8 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OBS Celebration Overlay</title>
   <style>
     body {
       margin: 0;
@@ -43,22 +45,12 @@
       line-height: 1.2;
     }
     
-    /* Different text colors for different moods */
-    #celebrationText.success {
-      color: #FFD700;
-    }
-    
-    #celebrationText.failure {
-      color: #FF4444;
-    }
-    
-    #celebrationText.rats {
-      color: #8B4513;
-    }
-    
-    #celebrationText.luck {
-      color: #00C853;
-    }
+    /* Different text colors */
+    #celebrationText.success { color: #FFD700; }
+    #celebrationText.failure { color: #FF4444; }
+    #celebrationText.rats { color: #8B4513; }
+    #celebrationText.luck { color: #00C853; }
+    #celebrationText.hammertime { color: #E91E63; }
     
     @keyframes textPulse {
       0% {
@@ -85,7 +77,6 @@
       overflow: hidden;
     }
     
-    /* Individual Emoji */
     .emoji {
       position: absolute;
       font-size: 48px;
@@ -104,7 +95,7 @@
       }
     }
     
-    /* Fireworks Canvas (only for HURRAH) */
+    /* Fireworks Canvas */
     #fireworksCanvas {
       position: absolute;
       top: 0;
@@ -114,20 +105,33 @@
       z-index: 1;
     }
     
-    #status {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      padding: 5px 10px;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      font-size: 12px;
-      border-radius: 3px;
-      z-index: 1000;
+    /* Shockwave for HammerTime */
+    .shockwave {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100px;
+      height: 100px;
+      border: 4px solid rgba(255, 215, 0, 0.8);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      animation: shockwave-expand 1s ease-out forwards;
+      z-index: 2;
     }
     
-    .connected { color: #4CAF50; }
-    .disconnected { color: #F44336; }
+    @keyframes shockwave-expand {
+      0% {
+        width: 100px;
+        height: 100px;
+        opacity: 1;
+      }
+      100% {
+        width: 1000px;
+        height: 1000px;
+        opacity: 0;
+        border-width: 0;
+      }
+    }
   </style>
 </head>
 <body>
@@ -136,19 +140,14 @@
     <div id="emojiContainer"></div>
     <div id="celebrationText">HURRAH!</div>
   </div>
-  
-  <div id="status">Connecting...</div>
-  
-  <!-- Load Socket.IO from CDN -->
+
   <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
   
   <script>
-    // Connect to server
-    const socket = io('https://killfeed-r756.onrender.com');
+    const socket = io(window.location.origin);
     const containerEl = document.getElementById('celebrationContainer');
     const textEl = document.getElementById('celebrationText');
     const emojiContainerEl = document.getElementById('emojiContainer');
-    const statusEl = document.getElementById('status');
     const canvas = document.getElementById('fireworksCanvas');
     const ctx = canvas.getContext('2d');
     
@@ -160,18 +159,69 @@
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     });
-    
-    socket.on('connect', () => {
-      console.log('Connected to server');
-      statusEl.innerHTML = '<span class="connected">● Connected</span>';
-      setTimeout(() => statusEl.style.display = 'none', 3000);
-    });
-    
-    socket.on('disconnect', () => {
-      console.log('Disconnected from server');
-      statusEl.style.display = 'block';
-      statusEl.innerHTML = '<span class="disconnected">● Disconnected</span>';
-    });
+
+    // Initialize Web Audio API for HammerTime
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioContext = null;
+
+    function initAudio() {
+      if (!audioContext) {
+        audioContext = new AudioContext();
+      }
+    }
+
+    function playHammerSound() {
+      initAudio();
+      
+      const now = audioContext.currentTime;
+      
+      const bassOsc = audioContext.createOscillator();
+      const bassGain = audioContext.createGain();
+      bassOsc.type = 'sine';
+      bassOsc.frequency.setValueAtTime(100, now);
+      bassOsc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+      bassGain.gain.setValueAtTime(0.8, now);
+      bassGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+      bassOsc.connect(bassGain);
+      bassGain.connect(audioContext.destination);
+      bassOsc.start(now);
+      bassOsc.stop(now + 0.3);
+      
+      const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.1, audioContext.sampleRate);
+      const noiseData = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < noiseData.length; i++) {
+        noiseData[i] = Math.random() * 2 - 1;
+      }
+      const noiseSource = audioContext.createBufferSource();
+      noiseSource.buffer = noiseBuffer;
+      const noiseGain = audioContext.createGain();
+      noiseGain.gain.setValueAtTime(0.3, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+      
+      const noiseFilter = audioContext.createBiquadFilter();
+      noiseFilter.type = 'lowpass';
+      noiseFilter.frequency.value = 1000;
+      
+      noiseSource.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(audioContext.destination);
+      noiseSource.start(now);
+      
+      setTimeout(() => {
+        const echoOsc = audioContext.createOscillator();
+        const echoGain = audioContext.createGain();
+        const echoTime = audioContext.currentTime;
+        echoOsc.type = 'sine';
+        echoOsc.frequency.setValueAtTime(80, echoTime);
+        echoOsc.frequency.exponentialRampToValueAtTime(30, echoTime + 0.1);
+        echoGain.gain.setValueAtTime(0.4, echoTime);
+        echoGain.gain.exponentialRampToValueAtTime(0.01, echoTime + 0.2);
+        echoOsc.connect(echoGain);
+        echoGain.connect(audioContext.destination);
+        echoOsc.start(echoTime);
+        echoOsc.stop(echoTime + 0.2);
+      }, 150);
+    }
     
     // Celebration types configuration
     const celebrationTypes = {
@@ -203,6 +253,15 @@
         useEmojis: true,
         emojis: ['🍀', '☘️'],
         emojiCount: 40
+      },
+      hammertime: {
+        text: 'HAMMER TIME!',
+        className: 'hammertime',
+        useEmojis: true,
+        emojis: ['🔨', '⚒️'],
+        emojiCount: 30,
+        hasSound: true,
+        hasShockwave: true
       }
     };
     
@@ -225,7 +284,7 @@
       }
       
       update() {
-        this.velocity.y += 0.1; // gravity
+        this.velocity.y += 0.1;
         this.x += this.velocity.x;
         this.y += this.velocity.y;
         this.alpha -= this.decay;
@@ -268,12 +327,12 @@
     
     function launchFireworks(config) {
       const launches = config.launches;
-      const duration = 4000; // 4 seconds
+      const duration = 5000;
       
       for (let i = 0; i < launches; i++) {
         setTimeout(() => {
           const x = Math.random() * canvas.width;
-          const y = Math.random() * canvas.height * 0.6; // Upper 60% of screen
+          const y = Math.random() * canvas.height * 0.6;
           createFirework(x, y, config.colors, config.particleCount);
           
           if (i === 0) {
@@ -283,33 +342,26 @@
       }
     }
     
-    // ===== EMOJI CODE (for FAILURE, RATS, LUCK) =====
+    // ===== EMOJI CODE =====
     function createEmoji(emoji) {
       const emojiEl = document.createElement('div');
       emojiEl.className = 'emoji';
       emojiEl.textContent = emoji;
       
-      // Random horizontal position
       emojiEl.style.left = Math.random() * 100 + '%';
-      
-      // Start from bottom
       emojiEl.style.bottom = '-50px';
       
-      // Random animation duration (2-4 seconds)
       const duration = 2 + Math.random() * 2;
       emojiEl.style.animationDuration = duration + 's';
       
-      // Random delay for staggered effect
       const delay = Math.random() * 2;
       emojiEl.style.animationDelay = delay + 's';
       
-      // Random size variation
       const size = 40 + Math.random() * 40;
       emojiEl.style.fontSize = size + 'px';
       
       emojiContainerEl.appendChild(emojiEl);
       
-      // Remove after animation completes
       setTimeout(() => {
         emojiEl.remove();
       }, (duration + delay) * 1000);
@@ -317,13 +369,24 @@
     
     function launchEmojis(config) {
       const count = config.emojiCount;
-      const duration = 3000; // 3 seconds to spawn all emojis
+      const duration = 3000;
       
       for (let i = 0; i < count; i++) {
         setTimeout(() => {
           const emoji = config.emojis[Math.floor(Math.random() * config.emojis.length)];
           createEmoji(emoji);
         }, (duration / count) * i);
+      }
+    }
+
+    function createShockwave() {
+      for (let i = 0; i < 3; i++) {
+        setTimeout(() => {
+          const wave = document.createElement('div');
+          wave.className = 'shockwave';
+          containerEl.appendChild(wave);
+          setTimeout(() => wave.remove(), 1000);
+        }, i * 200);
       }
     }
     
@@ -333,11 +396,9 @@
       
       const config = celebrationTypes[type] || celebrationTypes.hurrah;
       
-      // Set text and style
       textEl.textContent = config.text;
       textEl.className = config.className;
       
-      // Show container
       containerEl.classList.add('active');
       
       // Clear previous animations
@@ -354,6 +415,14 @@
       } else if (config.useEmojis) {
         launchEmojis(config);
       }
+
+      if (config.hasSound) {
+        playHammerSound();
+      }
+
+      if (config.hasShockwave) {
+        createShockwave();
+      }
       
       // Hide after 5 seconds
       setTimeout(() => {
@@ -366,6 +435,8 @@
         emojiContainerEl.innerHTML = '';
       }, 5000);
     });
+
+    console.log('Celebration overlay ready! 🎉');
   </script>
 </body>
 </html>

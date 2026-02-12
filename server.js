@@ -23,23 +23,29 @@ const io = new Server(server, {
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// Session configuration with FileStore for production
-app.use(session({
+// Session configuration with improved persistence
+const sessionMiddleware = session({
   store: new FileStore({
-    path: './sessions',           // Directory to store session files
-    ttl: 86400,                    // Session TTL in seconds (24 hours)
-    retries: 0,                    // Number of retries if file is locked
-    reapInterval: 3600             // Clean up expired sessions every hour
+    path: './sessions',
+    ttl: 86400 * 7,              // 7 days in seconds
+    retries: 0,
+    reapInterval: 3600,
+    secret: process.env.SESSION_SECRET || 'file-store-secret'
   }),
+  name: 'killfeed.sid',          // Custom cookie name
   secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
-  resave: false,
-  saveUninitialized: false,
+  resave: false,                 // Don't save session if unmodified
+  saveUninitialized: false,      // Don't create session until something stored
+  rolling: true,                 // Reset maxAge on every response
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+    httpOnly: true,              // Prevent XSS attacks
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
   }
-}));
+});
+
+app.use(sessionMiddleware);
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -64,12 +70,36 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Socket.IO handlers
-const socketHandlers = require('./socket/handlers');
-socketHandlers(io);
+// Session debug endpoint (remove in production)
+app.get('/debug/session', (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).send('Not found');
+  }
+  res.json({
+    sessionID: req.sessionID,
+    session: req.session,
+    cookie: req.session?.cookie
+  });
+});
 
-// Bot verification
-const { verifyBotToken } = require('./utils/botstartup');
+// Socket.IO handlers - PASS SESSION MIDDLEWARE
+const socketHandlers = require('./socket/handlers');
+socketHandlers(io, sessionMiddleware);
+
+// Optional: Bot verification
+async function verifyBot() {
+  if (!process.env.DISCORD_BOT_TOKEN) {
+    console.log('⚠️  Bot token not set - skipping bot verification');
+    return;
+  }
+
+  try {
+    const { verifyBotToken } = require('./utils/botstartup');
+    await verifyBotToken();
+  } catch (err) {
+    console.warn('⚠️  Bot verification skipped:', err.message);
+  }
+}
 
 async function startServer(retries = 3) {
   // Display Discord configuration
@@ -77,20 +107,19 @@ async function startServer(retries = 3) {
   console.log('Client ID:', process.env.DISCORD_CLIENT_ID ? '✓ Set' : '✗ Missing');
   console.log('Client Secret:', process.env.DISCORD_CLIENT_SECRET ? '✓ Set' : '✗ Missing');
   console.log('Redirect URI:', process.env.DISCORD_REDIRECT_URI || 'Not set');
-  console.log('Server ID:', process.env.DISCORD_SERVER_ID || 'Not set');
-  console.log('Admin Role IDs:', process.env.ADMIN_ROLE_IDS || '✗ Not set');
-  console.log('Moderator Role IDs:', process.env.MODERATOR_ROLE_IDS || '✗ Not set');
+  console.log('Bot Token:', process.env.DISCORD_BOT_TOKEN ? '✓ Set' : '✗ Not set (required for permissions)');
+  console.log('');
+  console.log('🆕 Permission System: Dynamic (checks Discord permissions)');
+  console.log('   - Admins: Users with Administrator permission');
+  console.log('   - Moderators: Users with Manage Members or similar permissions');
+  console.log('   - Works across all servers where bot is present');
 
-  // Verify bot token if provided
-  if (process.env.DISCORD_BOT_TOKEN) {
-    await verifyBotToken();
-  } else {
-    console.warn('⚠️  DISCORD_BOT_TOKEN not set - bot features disabled');
-  }
+  // Verify bot token if provided (optional)
+  await verifyBot();
   
   console.log('============================\n');
 
-  // Port - cPanel sets this via environment variable
+  // Port - Render/cPanel sets this via environment variable
   const PORT = process.env.PORT || 3000;
   
   // Start server with retry logic for port conflicts
@@ -108,8 +137,8 @@ async function startServer(retries = 3) {
           console.error('\nTo fix this, run:');
           console.error(`  kill -9 $(lsof -t -i:${PORT})`);
           console.error('Or:');
-          console.error('  killall -9 node');
-          console.error('\nThen restart the app in cPanel Node.js manager.');
+          console.error('  pkill -9 node');
+          console.error('\nThen restart the server.');
           console.error('================================\n');
           process.exit(1);
         }
@@ -121,6 +150,7 @@ async function startServer(retries = 3) {
       const address = server.address();
       console.log(`✅ Server running on port ${address.port}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🍪 Session cookie: killfeed.sid (7 days expiry)`);
       console.log(`🏠 Base URL: ${process.env.DISCORD_REDIRECT_URI?.replace('/auth/discord/callback', '') || 'http://localhost:' + address.port}`);
       console.log('\nServer is ready! 🚀\n');
     }
@@ -135,7 +165,6 @@ process.on('SIGTERM', () => {
     process.exit(0);
   });
   
-  // Force shutdown after 10 seconds
   setTimeout(() => {
     console.error('Forced shutdown after timeout');
     process.exit(1);
@@ -149,7 +178,6 @@ process.on('SIGINT', () => {
     process.exit(0);
   });
   
-  // Force shutdown after 10 seconds
   setTimeout(() => {
     console.error('Forced shutdown after timeout');
     process.exit(1);
@@ -160,21 +188,10 @@ process.on('SIGINT', () => {
 process.on('uncaughtException', (error) => {
   console.error('❌ Uncaught Exception:', error);
   
-  // Log to Discord webhook if available
-  if (process.env.DISCORD_WEBHOOK_URL) {
-    const fetch = require('node-fetch');
-    fetch(process.env.DISCORD_WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        embeds: [{
-          title: '❌ Server Crash',
-          description: `**Uncaught Exception**\n\`\`\`${error.message}\`\`\``,
-          color: 15158332,
-          timestamp: new Date().toISOString()
-        }]
-      })
-    }).catch(() => {});
+  // Don't exit on header errors (Socket.IO race conditions)
+  if (error.code === 'ERR_HTTP_HEADERS_SENT') {
+    console.warn('⚠️  Headers already sent - ignoring (Socket.IO race condition)');
+    return;
   }
   
   process.exit(1);
@@ -182,23 +199,6 @@ process.on('uncaughtException', (error) => {
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-  
-  // Log to Discord webhook if available
-  if (process.env.DISCORD_WEBHOOK_URL) {
-    const fetch = require('node-fetch');
-    fetch(process.env.DISCORD_WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        embeds: [{
-          title: '⚠️ Unhandled Promise Rejection',
-          description: `\`\`\`${reason}\`\`\``,
-          color: 16776960,
-          timestamp: new Date().toISOString()
-        }]
-      })
-    }).catch(() => {});
-  }
 });
 
 // Start the server
