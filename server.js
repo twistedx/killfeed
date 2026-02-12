@@ -34,6 +34,18 @@ const sessionPath = process.env.PERSISTENT_STORAGE_PATH
   ? path.join(process.env.PERSISTENT_STORAGE_PATH, 'sessions')
   : './sessions';
 
+console.log('\n========================================');
+console.log('🔧 SESSION CONFIGURATION');
+console.log('========================================');
+console.log('Storage path:', sessionPath);
+console.log('Cookie name:', 'killfeed.sid');
+console.log('Cookie maxAge:', '7 days');
+console.log('Cookie secure:', process.env.NODE_ENV === 'production');
+console.log('Cookie httpOnly:', true);
+console.log('Cookie sameSite:', 'lax');
+console.log('Session TTL:', '7 days');
+console.log('==========================================\n');
+
 const sessionMiddleware = session({
   store: new FileStore({
     path: sessionPath,
@@ -51,7 +63,7 @@ const sessionMiddleware = session({
     secure: process.env.NODE_ENV === 'production', // HTTPS only in production
     httpOnly: true,              // Prevent XSS attacks
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
+    sameSite: 'lax'  // Allow cookie on OAuth redirects (was 'strict')
   }
 });
 
