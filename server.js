@@ -5,7 +5,7 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const session = require('express-session');
-const FileStore = require('session-file-store')(session);
+const MongoStore = require('connect-mongo');
 const { Server } = require('socket.io');
 
 const app = express();
@@ -28,14 +28,15 @@ const io = new Server(server, {
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// Session configuration with improved persistence
+// Session configuration with MongoDB Atlas
 const sessionMiddleware = session({
-  store: new FileStore({
-    path: './sessions',
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI,
+    dbName: 'killfeed',
+    collectionName: 'sessions',
     ttl: 86400 * 7,              // 7 days in seconds
-    retries: 0,
-    reapInterval: 3600,
-    secret: process.env.SESSION_SECRET || 'file-store-secret'
+    autoRemove: 'native',        // Let MongoDB handle expired sessions
+    touchAfter: 24 * 3600        // Only update session once per day (unless modified)
   }),
   name: 'killfeed.sid',          // Custom cookie name
   secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
