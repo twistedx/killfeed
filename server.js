@@ -28,6 +28,12 @@ const io = new Server(server, {
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
+// Trust proxy - CRITICAL for Render/HTTPS to work with secure cookies
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+  console.log('✅ Trust proxy enabled (production mode)');
+}
+
 // Session configuration with file-based persistence
 // Use Render disk path if available, otherwise use local ./sessions
 const sessionPath = process.env.PERSISTENT_STORAGE_PATH 

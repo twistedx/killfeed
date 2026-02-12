@@ -147,9 +147,15 @@ router.get('/discord/callback', async (req, res) => {
       });
 
       console.log('\n--- Step 6: Set cookie and redirect ---');
+      
+      // Force set the cookie in response headers
+      const cookieValue = `killfeed.sid=${req.sessionID}; Path=/; HttpOnly; ${process.env.NODE_ENV === 'production' ? 'Secure;' : ''} SameSite=Lax; Max-Age=604800`;
+      res.setHeader('Set-Cookie', cookieValue);
+      console.log('Manually setting cookie header:', cookieValue);
+      
       const redirectUrl = '/dashboard.html';
       console.log('Redirecting to:', redirectUrl);
-      console.log('Cookie should be set in response headers');
+      console.log('Response headers will include Set-Cookie');
       console.log(`==========================================\n`);
       
       return res.redirect(redirectUrl);
@@ -180,6 +186,9 @@ router.get('/user', (req, res) => {
   console.log('========================================');
   console.log('Time:', new Date().toISOString());
   console.log('Path:', req.path);
+  console.log('Protocol:', req.protocol);
+  console.log('Secure:', req.secure);
+  console.log('Hostname:', req.hostname);
   console.log('Session ID:', req.sessionID);
   console.log('Cookies received:', req.headers.cookie);
   console.log('Session exists:', !!req.session);
@@ -209,6 +218,31 @@ router.get('/user', (req, res) => {
     console.log('==========================================\n');
     res.status(401).json({ error: 'Not authenticated' });
   }
+});
+
+// Test endpoint to check cookie functionality
+router.get('/test-cookie', (req, res) => {
+  console.log('\n🧪 COOKIE TEST');
+  console.log('Protocol:', req.protocol);
+  console.log('Secure:', req.secure);
+  console.log('Trust proxy:', req.app.get('trust proxy'));
+  console.log('Cookies received:', req.headers.cookie);
+  
+  res.cookie('test-cookie', 'test-value', {
+    maxAge: 60000,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  });
+  
+  res.json({
+    message: 'Test cookie set',
+    protocol: req.protocol,
+    secure: req.secure,
+    trustProxy: req.app.get('trust proxy'),
+    cookiesReceived: req.headers.cookie,
+    environment: process.env.NODE_ENV
+  });
 });
 
 module.exports = router;
