@@ -5,7 +5,7 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const session = require('express-session');
-const MongoStore = require('connect-mongo');
+const FileStore = require('session-file-store')(session);
 const { Server } = require('socket.io');
 
 const app = express();
@@ -28,15 +28,19 @@ const io = new Server(server, {
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// Session configuration with MongoDB Atlas
+// Session configuration with file-based persistence
+// Use Render disk path if available, otherwise use local ./sessions
+const sessionPath = process.env.PERSISTENT_STORAGE_PATH 
+  ? path.join(process.env.PERSISTENT_STORAGE_PATH, 'sessions')
+  : './sessions';
+
 const sessionMiddleware = session({
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI,
-    dbName: 'killfeed',
-    collectionName: 'sessions',
+  store: new FileStore({
+    path: sessionPath,
     ttl: 86400 * 7,              // 7 days in seconds
-    autoRemove: 'native',        // Let MongoDB handle expired sessions
-    touchAfter: 24 * 3600        // Only update session once per day (unless modified)
+    retries: 0,
+    reapInterval: 3600,
+    secret: process.env.SESSION_SECRET || 'file-store-secret'
   }),
   name: 'killfeed.sid',          // Custom cookie name
   secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
@@ -154,8 +158,13 @@ async function startServer(retries = 3) {
       }
     } else {
       const address = server.address();
+      const storagePath = process.env.PERSISTENT_STORAGE_PATH || 'local filesystem';
+      
       console.log(`✅ Server running on port ${address.port}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`💾 Storage: ${storagePath}`);
+      console.log(`📁 Sessions: ${sessionPath}`);
+      console.log(`⚙️  Config: ${process.env.PERSISTENT_STORAGE_PATH ? path.join(process.env.PERSISTENT_STORAGE_PATH, 'data') : './data'}`);
       console.log(`🍪 Session cookie: killfeed.sid (7 days expiry)`);
       console.log(`🏠 Base URL: ${process.env.DISCORD_REDIRECT_URI?.replace('/auth/discord/callback', '') || 'http://localhost:' + address.port}`);
       console.log('\nServer is ready! 🚀\n');

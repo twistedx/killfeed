@@ -8,7 +8,12 @@ let overlayConfigs = { default: loadConfig() };
 let approvedModerators = {};
 let adminSockets = new Set();
 
-const CONFIG_FILE = path.join(__dirname, '../data/overlay-config.json');
+// Use Render persistent disk if available, otherwise use local ./data
+const dataPath = process.env.PERSISTENT_STORAGE_PATH 
+  ? path.join(process.env.PERSISTENT_STORAGE_PATH, 'data')
+  : path.join(__dirname, '../data');
+
+const CONFIG_FILE = path.join(dataPath, 'overlay-config.json');
 
 function getDefaultConfig() {
   return {
