@@ -22,6 +22,11 @@ function getDefaultConfig() {
       position: { x: 20, y: 20 },
       layout: 'horizontal',
       size: 'medium',
+      visibility: {
+        kills: true,
+        extracted: true,
+        kia: true
+      },
       labels: {
         kills: 'Kills',
         extracted: 'Extracted',

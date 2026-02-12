@@ -110,6 +110,34 @@ function applyConfigToUI(config) {
       if (extractedLabelInput) extractedLabelInput.value = config.counters.labels.extracted || 'Extracted';
       if (kiaLabelInput) kiaLabelInput.value = config.counters.labels.kia || 'KIA';
     }
+    
+    // Individual counter visibility
+    if (config.counters.visibility) {
+      const killsToggle = document.getElementById('killsEnabled');
+      const extractedToggle = document.getElementById('extractedEnabled');
+      const kiaToggle = document.getElementById('kiaEnabled');
+      
+      if (killsToggle) {
+        killsToggle.checked = config.counters.visibility.kills ?? true;
+        const killsItem = killsToggle.closest('.counter-config-item');
+        if (!killsToggle.checked) killsItem?.classList.add('disabled');
+        else killsItem?.classList.remove('disabled');
+      }
+      
+      if (extractedToggle) {
+        extractedToggle.checked = config.counters.visibility.extracted ?? true;
+        const extractedItem = extractedToggle.closest('.counter-config-item');
+        if (!extractedToggle.checked) extractedItem?.classList.add('disabled');
+        else extractedItem?.classList.remove('disabled');
+      }
+      
+      if (kiaToggle) {
+        kiaToggle.checked = config.counters.visibility.kia ?? true;
+        const kiaItem = kiaToggle.closest('.counter-config-item');
+        if (!kiaToggle.checked) kiaItem?.classList.add('disabled');
+        else kiaItem?.classList.remove('disabled');
+      }
+    }
   }
 
   // Message
@@ -145,6 +173,11 @@ function buildConfigFromUI() {
       position: { preset: activePosition?.dataset.pos || 'bottom-left' },
       layout: document.getElementById('counterLayout').value,
       size: activeSize?.dataset.size || 'medium',
+      visibility: {
+        kills: document.getElementById('killsEnabled')?.checked ?? true,
+        extracted: document.getElementById('extractedEnabled')?.checked ?? true,
+        kia: document.getElementById('kiaEnabled')?.checked ?? true
+      },
       labels: {
         kills: document.getElementById('killsLabel')?.value || 'Kills',
         extracted: document.getElementById('extractedLabel')?.value || 'Extracted',
@@ -383,6 +416,27 @@ document.querySelectorAll('.preview-label-input').forEach(input => {
     }
   });
 });
+
+// Individual counter toggle handlers
+function setupCounterToggle(toggleId, counterType) {
+  const toggle = document.getElementById(toggleId);
+  if (!toggle) return;
+  
+  toggle.addEventListener('change', (e) => {
+    const configItem = e.target.closest('.counter-config-item');
+    const isEnabled = e.target.checked;
+    
+    if (isEnabled) {
+      configItem.classList.remove('disabled');
+    } else {
+      configItem.classList.add('disabled');
+    }
+  });
+}
+
+setupCounterToggle('killsEnabled', 'kills');
+setupCounterToggle('extractedEnabled', 'extracted');
+setupCounterToggle('kiaEnabled', 'kia');
 
 // Check auth on page load
 checkAuth();

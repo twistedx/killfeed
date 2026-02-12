@@ -93,6 +93,11 @@ console.log('Connecting to:', SERVER_URL);
       if (!isAuthenticated) return;
       console.log('Config update received:', config);
       
+      // Get counter elements
+      const killsItem = document.querySelector('.counter-item.kills');
+      const extractedItem = document.querySelector('.counter-item.extracted');
+      const kiaItem = document.querySelector('.counter-item.kia');
+      
       // Update counter labels if custom labels are set
       if (config.counters && config.counters.labels) {
         const killsLabelEl = document.getElementById('killsLabelDisplay');
@@ -110,12 +115,21 @@ console.log('Connecting to:', SERVER_URL);
         }
       }
       
+      // Update individual counter visibility
+      if (config.counters && config.counters.visibility) {
+        if (killsItem) {
+          killsItem.style.display = config.counters.visibility.kills ? '' : 'none';
+        }
+        if (extractedItem) {
+          extractedItem.style.display = config.counters.visibility.extracted ? '' : 'none';
+        }
+        if (kiaItem) {
+          kiaItem.style.display = config.counters.visibility.kia ? '' : 'none';
+        }
+      }
+      
       // Update counter colors if custom colors are set
       if (config.counters && config.counters.style) {
-        const killsItem = document.querySelector('.counter-item.kills');
-        const extractedItem = document.querySelector('.counter-item.extracted');
-        const kiaItem = document.querySelector('.counter-item.kia');
-        
         if (killsItem && config.counters.style.kills) {
           const killsValue = killsItem.querySelector('.counter-value');
           if (killsValue) {

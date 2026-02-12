@@ -63,11 +63,29 @@ function applyCounterConfig(counterConfig) {
     countersContainer.style.top = counterConfig.position.y + 'px';
   }
   
+  // Get individual counters
+  const killsCounter = document.querySelector('.counter.kills');
+  const extractedCounter = document.querySelector('.counter.extracted');
+  const kiaCounter = document.querySelector('.counter.kia');
+  
+  // Apply individual visibility
+  if (counterConfig.visibility) {
+    if (killsCounter) {
+      killsCounter.style.display = counterConfig.visibility.kills ? '' : 'none';
+    }
+    if (extractedCounter) {
+      extractedCounter.style.display = counterConfig.visibility.extracted ? '' : 'none';
+    }
+    if (kiaCounter) {
+      kiaCounter.style.display = counterConfig.visibility.kia ? '' : 'none';
+    }
+  }
+  
   // Apply labels if they exist
   if (counterConfig.labels) {
-    const killsLabelEl = document.querySelector('.counter.kills .counter-label');
-    const extractedLabelEl = document.querySelector('.counter.extracted .counter-label');
-    const kiaLabelEl = document.querySelector('.counter.kia .counter-label');
+    const killsLabelEl = killsCounter?.querySelector('.counter-label');
+    const extractedLabelEl = extractedCounter?.querySelector('.counter-label');
+    const kiaLabelEl = kiaCounter?.querySelector('.counter-label');
     
     if (killsLabelEl) killsLabelEl.textContent = counterConfig.labels.kills || 'Kills';
     if (extractedLabelEl) extractedLabelEl.textContent = counterConfig.labels.extracted || 'Extracted';
@@ -76,23 +94,22 @@ function applyCounterConfig(counterConfig) {
   
   // Apply colors
   if (counterConfig.style) {
-    const killsCounter = document.querySelector('.counter.kills');
-    const extractedCounter = document.querySelector('.counter.extracted');
-    const kiaCounter = document.querySelector('.counter.kia');
-    
-    if (counterConfig.style.kills) {
+    if (counterConfig.style.kills && killsCounter) {
       killsCounter.style.borderColor = counterConfig.style.kills.borderColor || '#4CAF50';
-      killsCounter.querySelector('.counter-value').style.color = counterConfig.style.kills.color || '#4CAF50';
+      const killsValue = killsCounter.querySelector('.counter-value');
+      if (killsValue) killsValue.style.color = counterConfig.style.kills.color || '#4CAF50';
     }
     
-    if (counterConfig.style.extracted) {
+    if (counterConfig.style.extracted && extractedCounter) {
       extractedCounter.style.borderColor = counterConfig.style.extracted.borderColor || '#FFC107';
-      extractedCounter.querySelector('.counter-value').style.color = counterConfig.style.extracted.color || '#FFC107';
+      const extractedValue = extractedCounter.querySelector('.counter-value');
+      if (extractedValue) extractedValue.style.color = counterConfig.style.extracted.color || '#FFC107';
     }
     
-    if (counterConfig.style.kia) {
+    if (counterConfig.style.kia && kiaCounter) {
       kiaCounter.style.borderColor = counterConfig.style.kia.borderColor || '#F44336';
-      kiaCounter.querySelector('.counter-value').style.color = counterConfig.style.kia.color || '#F44336';
+      const kiaValue = kiaCounter.querySelector('.counter-value');
+      if (kiaValue) kiaValue.style.color = counterConfig.style.kia.color || '#F44336';
     }
   }
 }
