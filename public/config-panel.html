@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Overlay Configuration</title>
   <link rel="stylesheet" href="/css/config-panel.css">
+  <!-- Emoji Picker Library -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
 </head>
 <body>
   <!-- Loading Screen -->
@@ -92,7 +94,9 @@
               <!-- Kills Counter -->
               <div class="counter-config-item">
                 <div class="counter-preview kills-preview">
-                  <div class="preview-icon">💀</div>
+                  <button class="preview-icon-btn" id="killsIconBtn" data-counter="kills" title="Click to change emoji">
+                    <span id="killsIcon">💀</span>
+                  </button>
                   <div class="preview-info">
                     <input type="text" class="preview-label-input" id="killsLabel" value="Kills" maxlength="20" placeholder="Counter Label">
                     <div class="preview-value">0</div>
@@ -125,7 +129,9 @@
               <!-- Extracted Counter -->
               <div class="counter-config-item">
                 <div class="counter-preview extracted-preview">
-                  <div class="preview-icon">✅</div>
+                  <button class="preview-icon-btn" id="extractedIconBtn" data-counter="extracted" title="Click to change emoji">
+                    <span id="extractedIcon">✅</span>
+                  </button>
                   <div class="preview-info">
                     <input type="text" class="preview-label-input" id="extractedLabel" value="Extracted" maxlength="20" placeholder="Counter Label">
                     <div class="preview-value">0</div>
@@ -158,7 +164,9 @@
               <!-- KIA Counter -->
               <div class="counter-config-item">
                 <div class="counter-preview kia-preview">
-                  <div class="preview-icon">☠️</div>
+                  <button class="preview-icon-btn" id="kiaIconBtn" data-counter="kia" title="Click to change emoji">
+                    <span id="kiaIcon">☠️</span>
+                  </button>
                   <div class="preview-info">
                     <input type="text" class="preview-label-input" id="kiaLabel" value="KIA" maxlength="20" placeholder="Counter Label">
                     <div class="preview-value">0</div>

@@ -275,26 +275,153 @@ body {
   display: none;
 }
 
+/* ===== CELEBRATIONS ===== */
+.celebration-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.celebration-container.active {
+  display: flex;
+}
+
+/* Celebration Text */
+#celebrationText {
+  font-size: 120px;
+  font-weight: bold;
+  text-shadow:
+    0 0 20px rgba(255, 215, 0, 0.8),
+    0 0 40px rgba(255, 215, 0, 0.6),
+    0 0 60px rgba(255, 215, 0, 0.4),
+    4px 4px 8px rgba(0, 0, 0, 0.8);
+  animation: textPulse 1s ease-in-out;
+  z-index: 100;
+  position: relative;
+  text-align: center;
+  max-width: 90%;
+  line-height: 1.2;
+}
+
+/* Different text colors */
+#celebrationText.success { color: #FFD700; }
+#celebrationText.failure { color: #FF4444; }
+#celebrationText.rats { color: #8B4513; }
+#celebrationText.luck { color: #00C853; }
+#celebrationText.hammertime { color: #E91E63; }
+
+@keyframes textPulse {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Emoji Container */
+#emojiContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.emoji {
+  position: absolute;
+  font-size: 48px;
+  animation: emojiFloat 3s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes emojiFloat {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-800px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Fireworks Canvas */
+#fireworksCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Shockwave for HammerTime */
+.shockwave {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  border: 4px solid rgba(255, 215, 0, 0.8);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: shockwave-expand 1s ease-out forwards;
+  z-index: 2;
+}
+
+@keyframes shockwave-expand {
+  0% {
+    width: 100px;
+    height: 100px;
+    opacity: 1;
+  }
+  100% {
+    width: 1000px;
+    height: 1000px;
+    opacity: 0;
+    border-width: 0;
+  }
+}
+
 /* ===== RESPONSIVE ADJUSTMENTS ===== */
 @media (max-width: 1280px) {
   .counter {
     padding: 12px 18px;
     min-width: 120px;
   }
-  
+
   .counter-icon {
     font-size: 28px;
   }
-  
+
   .counter-label {
     font-size: 12px;
   }
-  
+
   .counter-value {
     font-size: 24px;
   }
-  
+
   .message-content {
     font-size: 28px;
+  }
+
+  #celebrationText {
+    font-size: 80px;
   }
 }

@@ -18,7 +18,9 @@ console.log('Connecting to:', SERVER_URL);
     // Check authentication on page load
     async function checkAuth() {
       try {
-        const response = await fetch('/auth/user');
+        const response = await fetch('/auth/user', {
+          credentials: 'include' // Ensure cookies are sent
+        });
         
         if (!response.ok) {
           // Not authenticated - redirect to home

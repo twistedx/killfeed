@@ -11,9 +11,6 @@ const {
 
 const { checkUserPermissions } = require('../utils/permissions');
 
-// Create session store
-const sessionStore = new Map();
-
 // Initiate OAuth
 router.get('/discord', (req, res) => {
   // Request guilds scope to check user's servers
@@ -146,18 +143,18 @@ router.get('/discord/callback', async (req, res) => {
         cookie: req.session.cookie
       });
 
-      console.log('\n--- Step 6: Set cookie and redirect ---');
-      
-      // Force set the cookie in response headers
-      const cookieValue = `killfeed.sid=${req.sessionID}; Path=/; HttpOnly; ${process.env.NODE_ENV === 'production' ? 'Secure;' : ''} SameSite=Lax; Max-Age=604800`;
-      res.setHeader('Set-Cookie', cookieValue);
-      console.log('Manually setting cookie header:', cookieValue);
-      
+      console.log('\n--- Step 6: Redirect to dashboard ---');
+
+      // express-session will automatically set the cookie
+      // No need to manually set it - that can cause conflicts
+
       const redirectUrl = '/dashboard.html';
       console.log('Redirecting to:', redirectUrl);
-      console.log('Response headers will include Set-Cookie');
+      console.log('Session cookie will be set automatically by express-session');
+      console.log('Cookie name: killfeed.sid');
+      console.log('Session ID:', req.sessionID);
       console.log(`==========================================\n`);
-      
+
       return res.redirect(redirectUrl);
     });
 
@@ -173,10 +170,15 @@ router.get('/discord/callback', async (req, res) => {
 // Logout
 router.get('/logout', (req, res) => {
   if (req.session) {
-    sessionStore.delete(req.session.id);
-    req.session.destroy();
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Error destroying session:', err);
+      }
+      res.redirect('/');
+    });
+  } else {
+    res.redirect('/');
   }
-  res.redirect('/');
 });
 
 // Get user
@@ -246,4 +248,3 @@ router.get('/test-cookie', (req, res) => {
 });
 
 module.exports = router;
-module.exports.sessionStore = sessionStore;

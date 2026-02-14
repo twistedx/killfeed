@@ -29,17 +29,9 @@ console.log('Connecting to:', SERVER_URL);
     
     // Check authentication on page load
     async function checkAuth() {
-      // Check if session cookie exists before making API call
-      const hasSessionCookie = document.cookie.split(';').some(cookie => {
-        return cookie.trim().startsWith('killfeed.sid=');
-      });
-      
-      if (!hasSessionCookie) {
-        console.log('No session cookie found, redirecting to login');
-        window.location.href = '/?error=not_authenticated';
-        return;
-      }
-      
+      // Note: We skip client-side cookie check because the cookie is httpOnly
+      // JavaScript cannot read httpOnly cookies, so we rely on the server to verify
+
       try {
         const response = await fetch('/auth/user', {
           credentials: 'include'
@@ -244,8 +236,21 @@ console.log('Connecting to:', SERVER_URL);
     
     // Celebration control function
     function triggerCelebration(type) {
+      console.log('🎉 Triggering celebration:', type);
+      console.log('Socket connected:', socket.connected);
+      console.log('Is authenticated:', isAuthenticated);
       socket.emit('triggerCelebration', type);
     }
     
     // Check auth on page load
     checkAuth();
+
+    // Expose functions globally for inline event handlers
+    window.incrementCounter = incrementCounter;
+    window.decrementCounter = decrementCounter;
+    window.resetAllCounters = resetAllCounters;
+    window.updateMessage = updateMessage;
+    window.showMessage = showMessage;
+    window.hideMessage = hideMessage;
+    window.clearMessage = clearMessage;
+    window.triggerCelebration = triggerCelebration;
