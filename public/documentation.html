@@ -27,26 +27,28 @@
     </div>
   </nav>
 
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h3>Documentation</h3>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#quick-start" class="sidebar-link">Quick Start Guide</a>
+      <a href="#bot-installation" class="sidebar-link">Discord Bot Installation</a>
+      <a href="#authentication" class="sidebar-link">Authentication & Login</a>
+      <a href="#obs-setup" class="sidebar-link">OBS Overlay Setup</a>
+      <a href="#configuration" class="sidebar-link">Configuration Panel</a>
+      <a href="#moderator-controls" class="sidebar-link">Moderator Controls</a>
+      <a href="#admin-dashboard" class="sidebar-link">Admin Dashboard</a>
+      <a href="#troubleshooting" class="sidebar-link">Troubleshooting</a>
+    </nav>
+  </aside>
+
   <div class="container">
     <!-- Header -->
     <div class="header">
       <h1>📚 Kill Feed System Documentation</h1>
       <p>Complete step-by-step guide to installation, configuration, and usage</p>
-    </div>
-
-    <!-- Table of Contents -->
-    <div class="toc-box">
-      <h3>📋 Table of Contents</h3>
-      <ul>
-        <li><a href="#quick-start">Quick Start Guide</a></li>
-        <li><a href="#bot-installation">Discord Bot Installation</a></li>
-        <li><a href="#authentication">Authentication & Login</a></li>
-        <li><a href="#obs-setup">OBS Overlay Setup</a></li>
-        <li><a href="#configuration">Configuration Panel</a></li>
-        <li><a href="#moderator-controls">Moderator Controls</a></li>
-        <li><a href="#admin-dashboard">Admin Dashboard</a></li>
-        <li><a href="#troubleshooting">Troubleshooting</a></li>
-      </ul>
     </div>
 
     <!-- Quick Start Guide -->
@@ -615,5 +617,53 @@
       <p>Kill Feed System v2.0 Documentation</p>
     </div>
   </div>
+
+  <script>
+    // Highlight active section in sidebar
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+    const sections = document.querySelectorAll('.doc-section');
+
+    function highlightActiveSection() {
+      let currentSection = '';
+
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop - 120;
+        const sectionHeight = section.clientHeight;
+
+        if (window.scrollY >= sectionTop && window.scrollY < sectionTop + sectionHeight) {
+          currentSection = section.getAttribute('id');
+        }
+      });
+
+      sidebarLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${currentSection}`) {
+          link.classList.add('active');
+        }
+      });
+    }
+
+    // Smooth scroll to section
+    sidebarLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = link.getAttribute('href').substring(1);
+        const targetSection = document.getElementById(targetId);
+
+        if (targetSection) {
+          window.scrollTo({
+            top: targetSection.offsetTop - 100,
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+
+    // Update active section on scroll
+    window.addEventListener('scroll', highlightActiveSection);
+
+    // Set initial active section
+    highlightActiveSection();
+  </script>
 </body>
 </html>
