@@ -104,7 +104,53 @@
       color: #667eea;
       font-weight: bold;
     }
-    
+
+    /* Server Selector */
+    .server-selector {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 15px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .server-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .server-dropdown {
+      padding: 8px 12px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      background: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s;
+      min-width: 200px;
+    }
+
+    .server-dropdown:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .server-dropdown:focus {
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+    }
+
+    .server-dropdown option {
+      padding: 10px;
+      font-weight: 500;
+    }
+
     .logout-btn {
       padding: 10px 20px;
       background: #f44336;

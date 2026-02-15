@@ -131,8 +131,6 @@ const ConfigPanel = (() => {
 
       // User is admin
       isAuthenticated = true;
-      domCache.loadingScreen.style.display = 'none';
-      domCache.configPanel.style.display = 'block';
 
       // Set user info
       domCache.adminName.textContent = user.username;
@@ -141,8 +139,21 @@ const ConfigPanel = (() => {
         : '/default-avatar.png';
       domCache.adminAvatar.src = avatarUrl;
 
-      // Set overlay URL
-      domCache.overlayUrl.textContent = `${window.location.origin}/obs-overlay.html`;
+      // Initialize socket with server parameter
+      if (user.selectedServer) {
+        initializeSocket(user.selectedServer.id, user.selectedServer.name);
+
+        // Set overlay URL with server parameter
+        domCache.overlayUrl.textContent = `${window.location.origin}/obs-overlay.html?server=${user.selectedServer.id}`;
+      } else {
+        console.error('No server selected');
+        alert('Error: No server selected. Please re-authenticate.');
+        window.location.href = '/';
+        return;
+      }
+
+      domCache.loadingScreen.style.display = 'none';
+      domCache.configPanel.style.display = 'block';
 
       // Load current config
       requestConfig();
@@ -154,8 +165,11 @@ const ConfigPanel = (() => {
   }
 
   // ===== SOCKET MANAGEMENT =====
-  function initializeSocket() {
-    socket = io(window.location.origin);
+  function initializeSocket(serverId, serverName) {
+    console.log('Initializing socket for server:', serverName);
+    socket = io(window.location.origin, {
+      query: { server: serverId }
+    });
 
     socket.on('connect', () => {
       console.log('Socket connected');
@@ -726,9 +740,8 @@ const ConfigPanel = (() => {
   // ===== INITIALIZATION =====
   function init() {
     cacheDOMElements();
-    initializeSocket();
     setupEventListeners();
-    checkAuth();
+    checkAuth(); // Socket will be initialized after auth with server parameter
   }
 
   // ===== PUBLIC API =====

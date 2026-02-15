@@ -23,10 +23,10 @@ console.log('Connecting to:', SERVER_URL);
     // Check for error messages in URL
     const urlParams = new URLSearchParams(window.location.search);
     const error = urlParams.get('error');
-    
+
     if (error) {
       messageBox.classList.add('error');
-      
+
       switch(error) {
         case 'no_code':
           messageTitle.textContent = '❌ Authentication Error';
@@ -52,9 +52,44 @@ console.log('Connecting to:', SERVER_URL);
           messageTitle.textContent = '❌ Error';
           messageText.textContent = 'An error occurred. Please try again.';
       }
-      
+
       // Clear error from URL
       setTimeout(() => {
         window.history.replaceState({}, document.title, '/');
       }, 10000);
+    }
+
+    // Bot invite functionality
+    const inviteBotBtn = document.getElementById('inviteBotBtn');
+
+    if (inviteBotBtn) {
+      inviteBotBtn.addEventListener('click', async () => {
+        try {
+          // Fetch the bot CLIENT_ID from the server
+          const response = await fetch('/api/bot-info');
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch bot info');
+          }
+
+          const data = await response.json();
+
+          if (!data.clientId) {
+            throw new Error('Client ID not found');
+          }
+
+          // Generate Discord bot invite URL
+          // Permissions: 0 means no special permissions (just presence in server)
+          // Scopes: bot and applications.commands for slash commands
+          const inviteUrl = `https://discord.com/oauth2/authorize?client_id=${data.clientId}&permissions=0&scope=bot%20applications.commands`;
+
+          // Open invite URL in new tab
+          window.open(inviteUrl, '_blank');
+        } catch (error) {
+          console.error('Error opening bot invite:', error);
+          messageBox.classList.add('error');
+          messageTitle.textContent = '❌ Bot Invite Error';
+          messageText.textContent = 'Could not generate bot invite link. Please contact the administrator.';
+        }
+      });
     }

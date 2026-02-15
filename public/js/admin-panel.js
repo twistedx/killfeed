@@ -1,7 +1,8 @@
     // Auto-detect server URL (works in dev and production)
 const SERVER_URL = window.location.origin;
-const socket = io(SERVER_URL);
-console.log('Connecting to:', SERVER_URL);
+
+// Socket will be initialized after auth check with server parameter
+let socket = null;
     
     const loadingScreen = document.getElementById('loadingScreen');
     const accessDenied = document.getElementById('accessDenied');
@@ -39,13 +40,27 @@ console.log('Connecting to:', SERVER_URL);
           return;
         }
         
+        // Initialize Socket.IO with server parameter
+        if (user.selectedServer) {
+          socket = io(SERVER_URL, {
+            query: { server: user.selectedServer.id }
+          });
+          console.log('Socket.IO connecting to server:', user.selectedServer.name);
+          initializeSocketHandlers();
+        } else {
+          console.error('No server selected');
+          alert('Error: No server selected. Please re-authenticate.');
+          window.location.href = '/';
+          return;
+        }
+
         // User is admin - show dashboard
         loadingScreen.style.display = 'none';
         dashboardPanel.style.display = 'block';
-        
+
         // Set admin info
         adminNameEl.textContent = `${user.username}#${user.discriminator}`;
-        
+
         if (user.avatar) {
           adminAvatarEl.src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
         } else {
@@ -57,22 +72,25 @@ console.log('Connecting to:', SERVER_URL);
         window.location.href = '/?error=auth_check_failed';
       }
     }
-    
-    // Connection status
-    socket.on('connect', () => {
-      console.log('Connected to server');
-      statusIndicator.classList.remove('disconnected');
-      connectionText.textContent = 'Connected';
-    });
-    
-    socket.on('disconnect', () => {
-      console.log('Disconnected from server');
-      statusIndicator.classList.add('disconnected');
-      connectionText.textContent = 'Disconnected';
-    });
-    
-    // Update approved moderators list
-    socket.on('approvedModeratorsUpdate', (mods) => {
+
+
+    // Initialize socket event handlers
+    function initializeSocketHandlers() {
+      // Connection status
+      socket.on('connect', () => {
+        console.log('Connected to server');
+        statusIndicator.classList.remove('disconnected');
+        connectionText.textContent = 'Connected';
+      });
+
+      socket.on('disconnect', () => {
+        console.log('Disconnected from server');
+        statusIndicator.classList.add('disconnected');
+        connectionText.textContent = 'Disconnected';
+      });
+
+      // Update approved moderators list
+      socket.on('approvedModeratorsUpdate', (mods) => {
       console.log('Approved moderators:', mods);
       approvedCountEl.textContent = mods.length;
       
@@ -110,9 +128,11 @@ console.log('Connecting to:', SERVER_URL);
         approvedListEl.appendChild(card);
       });
     });
-    
+    }
+
     // Kick moderator
     function kickModerator(socketId) {
+      if (!socket) return;
       if (confirm('Disconnect this moderator? They will need to reconnect.')) {
         console.log('Kicking moderator:', socketId);
         socket.emit('kickModerator', socketId);

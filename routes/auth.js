@@ -107,6 +107,11 @@ router.get('/discord/callback', async (req, res) => {
     });
 
     console.log('\n--- Step 4: Create session ---');
+
+    // Auto-select first shared guild as default server
+    // Users can switch servers later if they have access to multiple
+    const defaultServer = permissions.sharedGuilds[0];
+
     // Create session
     req.session.user = {
       id: userData.id,
@@ -118,10 +123,19 @@ router.get('/discord/callback', async (req, res) => {
       sharedGuilds: permissions.sharedGuilds
     };
 
+    // Store selected server (for multi-server isolation)
+    req.session.selectedServer = {
+      id: defaultServer.guildId,
+      name: defaultServer.guildName,
+      isAdmin: defaultServer.isAdmin,
+      isModerator: defaultServer.isModerator
+    };
+
     console.log('Session object created:', {
       username: req.session.user.username,
       isAdmin: req.session.user.isAdmin,
       isModerator: req.session.user.isModerator,
+      selectedServer: req.session.selectedServer.name,
       sessionID: req.sessionID
     });
 
@@ -195,7 +209,7 @@ router.get('/user', (req, res) => {
   console.log('Cookies received:', req.headers.cookie);
   console.log('Session exists:', !!req.session);
   console.log('Session.user exists:', !!req.session?.user);
-  
+
   if (req.session) {
     console.log('Session details:', {
       id: req.session.id,
@@ -204,15 +218,19 @@ router.get('/user', (req, res) => {
         username: req.session.user.username,
         isAdmin: req.session.user.isAdmin,
         isModerator: req.session.user.isModerator
-      } : null
+      } : null,
+      selectedServer: req.session.selectedServer
     });
   }
-  
+
   if (req.session?.user) {
     console.log('✅ User authenticated:', req.session.user.username);
     console.log('Returning user data to client');
     console.log('==========================================\n');
-    res.json(req.session.user);
+    res.json({
+      ...req.session.user,
+      selectedServer: req.session.selectedServer
+    });
   } else {
     console.log('❌ User not authenticated');
     console.log('Reason:', !req.session ? 'No session' : 'No user in session');
@@ -220,6 +238,43 @@ router.get('/user', (req, res) => {
     console.log('==========================================\n');
     res.status(401).json({ error: 'Not authenticated' });
   }
+});
+
+// Switch server (for users in multiple guilds)
+router.post('/switch-server', (req, res) => {
+  if (!req.session?.user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  const { serverId } = req.body;
+
+  // Validate user has access to this server
+  const guild = req.session.user.sharedGuilds.find(g => g.guildId === serverId);
+
+  if (!guild) {
+    return res.status(403).json({ error: 'No access to this server' });
+  }
+
+  // Update selected server
+  req.session.selectedServer = {
+    id: guild.guildId,
+    name: guild.guildName,
+    isAdmin: guild.isAdmin,
+    isModerator: guild.isModerator
+  };
+
+  req.session.save((err) => {
+    if (err) {
+      console.error('Error saving session:', err);
+      return res.status(500).json({ error: 'Failed to switch server' });
+    }
+
+    console.log(`✅ ${req.session.user.username} switched to server: ${guild.guildName}`);
+    res.json({
+      success: true,
+      selectedServer: req.session.selectedServer
+    });
+  });
 });
 
 // Test endpoint to check cookie functionality

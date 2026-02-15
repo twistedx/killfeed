@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation - Kill Feed System</title>
+  <link rel="stylesheet" href="/css/documentation.css">
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="/" class="navbar-brand">
+        <span class="brand-icon">🎮</span>
+        <span class="brand-text">Kill Feed</span>
+      </a>
+      <div class="navbar-links">
+        <a href="/documentation.html" class="nav-link active">Documentation</a>
+        <a href="/auth/discord" class="nav-link">Login</a>
+        <a href="https://discord.gg/X2fAZCukn3" target="_blank" class="nav-link discord-link">
+          <svg class="discord-icon-small" viewBox="0 0 71 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.440769 45.4204 0.525289C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.525289C25.5141 0.443589 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6986 30.1693C53.6986 34.1136 50.9 37.3253 47.3178 37.3253Z" fill="currentColor"/>
+          </svg>
+          Join Discord
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>📚 Kill Feed System Documentation</h1>
+      <p>Complete step-by-step guide to installation, configuration, and usage</p>
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="toc-box">
+      <h3>📋 Table of Contents</h3>
+      <ul>
+        <li><a href="#quick-start">Quick Start Guide</a></li>
+        <li><a href="#bot-installation">Discord Bot Installation</a></li>
+        <li><a href="#authentication">Authentication & Login</a></li>
+        <li><a href="#obs-setup">OBS Overlay Setup</a></li>
+        <li><a href="#configuration">Configuration Panel</a></li>
+        <li><a href="#moderator-controls">Moderator Controls</a></li>
+        <li><a href="#admin-dashboard">Admin Dashboard</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </div>
+
+    <!-- Quick Start Guide -->
+    <section id="quick-start" class="doc-section">
+      <h2>🚀 Quick Start Guide</h2>
+      <p class="section-intro">Get up and running in 5 minutes</p>
+
+      <div class="step-box">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h3>Add the Discord Bot</h3>
+          <p>Click the "Invite Bot to Discord" button on the home page. Select your server and authorize the bot.</p>
+          <div class="info-box">
+            <strong>Required Permission:</strong> You need Administrator permission in your Discord server to add bots.
+          </div>
+        </div>
+      </div>
+
+      <div class="step-box">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h3>Login with Discord</h3>
+          <p>Click "Login with Discord" and authorize the application to access your Discord account information.</p>
+          <div class="info-box">
+            <strong>What we access:</strong> Your username, avatar, and server memberships/permissions.
+          </div>
+        </div>
+      </div>
+
+      <div class="step-box">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h3>Access Your Dashboard</h3>
+          <p>Based on your Discord permissions, you'll be redirected to either:</p>
+          <ul>
+            <li><strong>Admin Dashboard</strong> - If you have Administrator permission</li>
+            <li><strong>Moderator Panel</strong> - If you have Manage Members permission</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-box">
+        <div class="step-number">4</div>
+        <div class="step-content">
+          <h3>Add Overlay to OBS</h3>
+          <p>Copy the overlay URL from your dashboard and add it as a Browser Source in OBS Studio.</p>
+          <div class="code-box">
+            <strong>Recommended Settings:</strong><br>
+            Width: 1920 | Height: 1080 | FPS: 30
+          </div>
+        </div>
+      </div>
+
+      <div class="step-box">
+        <div class="step-number">5</div>
+        <div class="step-content">
+          <h3>Start Controlling!</h3>
+          <p>Use the moderator panel to update counters, messages, and trigger celebrations. Changes appear instantly on your OBS overlay!</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Discord Bot Installation -->
+    <section id="bot-installation" class="doc-section">
+      <h2>🤖 Discord Bot Installation</h2>
+      <p class="section-intro">Detailed instructions for adding the bot to your Discord server</p>
+
+      <h3>Prerequisites</h3>
+      <ul class="checklist">
+        <li>Discord account</li>
+        <li>Administrator permission in at least one Discord server</li>
+        <li>Modern web browser (Chrome, Firefox, Edge, Safari)</li>
+      </ul>
+
+      <h3>Installation Steps</h3>
+
+      <div class="numbered-section">
+        <div class="number-badge">1</div>
+        <div class="content">
+          <h4>Click the Invite Button</h4>
+          <p>On the home page, locate the "Setup the Discord Bot" section and click the <strong>"Invite Bot to Discord"</strong> button.</p>
+        </div>
+      </div>
+
+      <div class="numbered-section">
+        <div class="number-badge">2</div>
+        <div class="content">
+          <h4>Select Your Server</h4>
+          <p>Discord will open an authorization page. From the dropdown menu, select the server where you want to add the bot.</p>
+          <div class="warning-box">
+            <strong>⚠️ Important:</strong> Only servers where you have Administrator permission will appear in the list.
+          </div>
+        </div>
+      </div>
+
+      <div class="numbered-section">
+        <div class="number-badge">3</div>
+        <div class="content">
+          <h4>Review Permissions</h4>
+          <p>The bot requests minimal permissions. Review and click "Authorize".</p>
+          <div class="info-box">
+            <strong>Permissions Requested:</strong> The bot only needs to be present in your server. It doesn't request any special permissions like managing roles or messages.
+          </div>
+        </div>
+      </div>
+
+      <div class="numbered-section">
+        <div class="number-badge">4</div>
+        <div class="content">
+          <h4>Complete CAPTCHA</h4>
+          <p>Complete the "I'm not a robot" verification if prompted.</p>
+        </div>
+      </div>
+
+      <div class="numbered-section">
+        <div class="number-badge">5</div>
+        <div class="content">
+          <h4>Verify Bot Presence</h4>
+          <p>Return to your Discord server and verify the bot appears in the member list. You should see it online.</p>
+          <div class="success-box">
+            <strong>✅ Success!</strong> The bot is now installed and ready to authenticate users.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Authentication & Login -->
+    <section id="authentication" class="doc-section">
+      <h2>🔐 Authentication & Login</h2>
+      <p class="section-intro">How the permission-based authentication system works</p>
+
+      <h3>How Authentication Works</h3>
+      <p>The Kill Feed System uses Discord OAuth for secure authentication. When you login, the system:</p>
+
+      <ol class="detailed-list">
+        <li>Redirects you to Discord's authorization page</li>
+        <li>You grant permission for the app to read your Discord profile and server memberships</li>
+        <li>Discord returns you to the Kill Feed System with an authorization code</li>
+        <li>The system exchanges this code for your user information</li>
+        <li>Your permissions are checked across all servers where the bot is present</li>
+        <li>You're redirected to the appropriate dashboard based on your highest permission level</li>
+      </ol>
+
+      <h3>Permission Levels</h3>
+
+      <div class="permission-card">
+        <div class="permission-icon">👑</div>
+        <div class="permission-details">
+          <h4>Administrator Access</h4>
+          <p><strong>Discord Permission Required:</strong> Administrator</p>
+          <p><strong>Access Level:</strong> Full system access</p>
+          <p><strong>Features:</strong></p>
+          <ul>
+            <li>Admin Dashboard with system statistics</li>
+            <li>User management and monitoring</li>
+            <li>Complete configuration panel</li>
+            <li>All moderator controls</li>
+            <li>Activity logs and analytics</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="permission-card">
+        <div class="permission-icon">🎮</div>
+        <div class="permission-details">
+          <h4>Moderator Access</h4>
+          <p><strong>Discord Permission Required:</strong> Manage Members (or higher)</p>
+          <p><strong>Access Level:</strong> Control panel access</p>
+          <p><strong>Features:</strong></p>
+          <ul>
+            <li>Moderator control panel</li>
+            <li>Counter management (increment/decrement/reset)</li>
+            <li>Scrolling message updates</li>
+            <li>Celebration triggers</li>
+            <li>Real-time overlay control</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Multi-Server Support</h3>
+      <div class="info-box">
+        <strong>How it works:</strong> If you have Administrator permission in <strong>any</strong> server where the bot is present, you get Admin access. The system checks all your servers and grants you the highest permission level found.
+      </div>
+
+      <h3>Session Duration</h3>
+      <p>Once logged in, your session lasts for <strong>7 days</strong>. After 7 days of inactivity, you'll need to login again. The session automatically extends with each visit.</p>
+    </section>
+
+    <!-- OBS Overlay Setup -->
+    <section id="obs-setup" class="doc-section">
+      <h2>📺 OBS Overlay Setup</h2>
+      <p class="section-intro">Step-by-step guide to adding the overlay to OBS Studio</p>
+
+      <div class="numbered-section">
+        <div class="number-badge">1</div>
+        <div class="content">
+          <h4>Open OBS Studio</h4>
+          <p>Launch OBS Studio and navigate to the scene where you want to add the overlay.</p>
+        </div>
+      </div>
+
+      <div class="numbered-section">
+        <div class="number-badge">2</div>
+        <div class="content">
+          <h4>Add Browser Source</h4>
+          <p>In the Sources panel, click the <strong>+</strong> button and select <strong>"Browser"</strong> from the list.</p>
+        </div>
+      </div>
+
+      <div class="numbered-section">
+        <div class="number-badge">3</div>
+        <div class="content">
+          <h4>Name Your Source</h4>
+          <p>Give it a descriptive name like "Kill Feed Overlay" and click OK.</p>
+        </div>
+      </div>
+
+      <div class="numbered-section">
+        <div class="number-badge">4</div>
+        <div class="content">
+          <h4>Get the Overlay URL</h4>
+          <p>From your Dashboard or Moderator Panel, locate the "OBS Overlay URL" section and click the copy button.</p>
+          <div class="code-box">
+            Example URL: https://yourdomain.com/obs-overlay.html
+          </div>
+        </div>
+      </div>
+
+      <div class="numbered-section">
+        <div class="number-badge">5</div>
+        <div class="content">
+          <h4>Configure Browser Source</h4>
+          <p>In the Browser Source properties window, paste the URL and configure these settings:</p>
+          <div class="settings-table">
+            <div class="setting-row">
+              <span class="setting-name">URL:</span>
+              <span class="setting-value">[Paste your overlay URL]</span>
+            </div>
+            <div class="setting-row">
+              <span class="setting-name">Width:</span>
+              <span class="setting-value">1920</span>
+            </div>
+            <div class="setting-row">
+              <span class="setting-name">Height:</span>
+              <span class="setting-value">1080</span>
+            </div>
+            <div class="setting-row">
+              <span class="setting-name">FPS:</span>
+              <span class="setting-value">30</span>
+            </div>
+            <div class="setting-row">
+              <span class="setting-name">Shutdown source when not visible:</span>
+              <span class="setting-value">✓ Checked</span>
+            </div>
+            <div class="setting-row">
+              <span class="setting-name">Refresh browser when scene becomes active:</span>
+              <span class="setting-value">☐ Unchecked</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="numbered-section">
+        <div class="number-badge">6</div>
+        <div class="content">
+          <h4>Click OK</h4>
+          <p>The overlay will appear in your scene. You can resize and reposition it as needed.</p>
+        </div>
+      </div>
+
+      <div class="numbered-section">
+        <div class="number-badge">7</div>
+        <div class="content">
+          <h4>Test the Connection</h4>
+          <p>Go to your Moderator Panel and click one of the counter buttons. The overlay in OBS should update immediately!</p>
+          <div class="success-box">
+            <strong>✅ It's Live!</strong> Your overlay is now connected and will update in real-time whenever changes are made in the control panel.
+          </div>
+        </div>
+      </div>
+
+      <h3>Troubleshooting OBS Issues</h3>
+      <div class="troubleshoot-box">
+        <h4>Overlay not showing?</h4>
+        <ul>
+          <li>Right-click the source and select "Interact" to see if there are any error messages</li>
+          <li>Verify the URL is correct (copy it again from the dashboard)</li>
+          <li>Try refreshing the browser source (right-click → Refresh)</li>
+          <li>Check your internet connection</li>
+        </ul>
+      </div>
+
+      <div class="troubleshoot-box">
+        <h4>Overlay not updating?</h4>
+        <ul>
+          <li>Check the connection status indicator in the moderator panel</li>
+          <li>Refresh the browser source in OBS</li>
+          <li>Verify your session is still active (login again if needed)</li>
+          <li>Check browser console for errors (right-click source → Interact → F12)</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Configuration Panel -->
+    <section id="configuration" class="doc-section">
+      <h2>⚙️ Configuration Panel</h2>
+      <p class="section-intro">Customize your overlay appearance and behavior</p>
+
+      <h3>Accessing Configuration</h3>
+      <p>The Configuration Panel is accessible from the Admin Dashboard. Navigate to <strong>Dashboard → Config Panel</strong> to customize your overlay.</p>
+
+      <h3>Counter Configuration</h3>
+      <div class="config-section">
+        <h4>Position Presets</h4>
+        <p>Choose where counters appear on your overlay:</p>
+        <ul>
+          <li><strong>Top-Left:</strong> Upper left corner</li>
+          <li><strong>Top-Center:</strong> Centered at the top</li>
+          <li><strong>Top-Right:</strong> Upper right corner</li>
+          <li><strong>Bottom-Left:</strong> Lower left corner</li>
+          <li><strong>Bottom-Center:</strong> Centered at the bottom</li>
+          <li><strong>Bottom-Right:</strong> Lower right corner</li>
+        </ul>
+
+        <h4>Layout Options</h4>
+        <ul>
+          <li><strong>Horizontal:</strong> Counters arranged side-by-side in a row</li>
+          <li><strong>Vertical:</strong> Counters stacked vertically</li>
+          <li><strong>Grid:</strong> 2x2 grid layout (best for 3-4 counters)</li>
+        </ul>
+
+        <h4>Size Options</h4>
+        <ul>
+          <li><strong>Small:</strong> Compact size, minimal screen space</li>
+          <li><strong>Medium:</strong> Balanced size (recommended)</li>
+          <li><strong>Large:</strong> Maximum visibility for viewers</li>
+        </ul>
+
+        <h4>Individual Counter Settings</h4>
+        <p>For each counter (Kills, Extracted, KIA), you can customize:</p>
+        <ul>
+          <li><strong>Visibility:</strong> Show or hide the counter</li>
+          <li><strong>Label:</strong> Custom text label (e.g., "Eliminations" instead of "Kills")</li>
+          <li><strong>Icon:</strong> Any emoji (💀, ✅, ☠️, etc.)</li>
+          <li><strong>Text Color:</strong> Color picker for label and value</li>
+          <li><strong>Border Color:</strong> Color picker for counter border</li>
+        </ul>
+      </div>
+
+      <h3>Message Configuration</h3>
+      <div class="config-section">
+        <h4>Position</h4>
+        <ul>
+          <li><strong>Top:</strong> Scrolling bar at the top of the screen</li>
+          <li><strong>Bottom:</strong> Scrolling bar at the bottom of the screen</li>
+        </ul>
+
+        <h4>Appearance</h4>
+        <ul>
+          <li><strong>Font Size:</strong> Adjust text size (16px - 72px)</li>
+          <li><strong>Text Color:</strong> Choose message text color</li>
+          <li><strong>Border Color:</strong> Choose banner border color</li>
+          <li><strong>Scroll Speed:</strong> Control how fast the message scrolls (1-50)</li>
+        </ul>
+
+        <h4>Enable/Disable</h4>
+        <p>Toggle the scrolling message on or off without losing your configuration.</p>
+      </div>
+
+      <h3>Celebration Configuration</h3>
+      <div class="config-section">
+        <h4>General Settings</h4>
+        <ul>
+          <li><strong>Enable Celebrations:</strong> Master toggle for all celebration effects</li>
+          <li><strong>Duration:</strong> How long celebrations display (1-10 seconds)</li>
+          <li><strong>Text Size:</strong> Size of celebration text (60px - 200px)</li>
+          <li><strong>Effect Intensity:</strong> Particle density (Low/Normal/High)</li>
+        </ul>
+
+        <h4>Celebration Types</h4>
+        <ul>
+          <li><strong>HURRAH:</strong> Golden fireworks with success text</li>
+          <li><strong>RATS:</strong> Rat emojis falling from the sky</li>
+          <li><strong>LUCK:</strong> Four-leaf clover emojis</li>
+          <li><strong>FAIL:</strong> Poop emojis with failure text</li>
+          <li><strong>HAMMER TIME:</strong> Shockwave effect with sound</li>
+        </ul>
+      </div>
+
+      <h3>Saving Configuration</h3>
+      <div class="info-box">
+        <strong>Auto-Save:</strong> All configuration changes are saved automatically and apply immediately to all connected overlays. No need to refresh OBS!
+      </div>
+    </section>
+
+    <!-- Moderator Controls -->
+    <section id="moderator-controls" class="doc-section">
+      <h2>🎮 Moderator Controls</h2>
+      <p class="section-intro">How to use the moderator control panel</p>
+
+      <h3>Counter Controls</h3>
+      <div class="control-section">
+        <h4>Increment (+)</h4>
+        <p>Click the + button next to any counter to increase its value by 1.</p>
+
+        <h4>Decrement (-)</h4>
+        <p>Click the - button next to any counter to decrease its value by 1.</p>
+
+        <h4>Reset Individual Counter</h4>
+        <p>Click the reset icon (🔄) next to a specific counter to set it back to 0.</p>
+
+        <h4>Reset All Counters</h4>
+        <p>Click the "Reset All Counters" button at the bottom to set all counters to 0 simultaneously.</p>
+      </div>
+
+      <h3>Scrolling Message</h3>
+      <div class="control-section">
+        <h4>Update Message</h4>
+        <ol>
+          <li>Type your message in the text input field</li>
+          <li>Click "Update Message" button</li>
+          <li>Message will immediately start scrolling on the overlay</li>
+        </ol>
+
+        <h4>Show/Hide Message</h4>
+        <p>Use the "Show Message" and "Hide Message" buttons to toggle the scrolling banner visibility without clearing the text.</p>
+
+        <h4>Clear Message</h4>
+        <p>Click "Clear Message" to remove the current message text and hide the banner.</p>
+      </div>
+
+      <h3>Celebrations</h3>
+      <div class="control-section">
+        <h4>Trigger Celebration</h4>
+        <p>Click any of the celebration buttons to trigger an animation:</p>
+        <ul>
+          <li><strong>🎉 HURRAH:</strong> For victories and achievements</li>
+          <li><strong>🐀 RATS:</strong> For unfortunate events</li>
+          <li><strong>🍀 GOOD LUCK:</strong> For risky plays</li>
+          <li><strong>💩 FAIL:</strong> For major failures</li>
+          <li><strong>🔨 HAMMER TIME:</strong> For epic moments</li>
+        </ul>
+
+        <p>Celebrations play for the duration set in the configuration panel and automatically disappear.</p>
+      </div>
+
+      <h3>Best Practices</h3>
+      <div class="info-box">
+        <ul>
+          <li>Keep scrolling messages short and impactful</li>
+          <li>Use celebrations sparingly for maximum effect</li>
+          <li>Reset counters between gaming sessions for accuracy</li>
+          <li>Test changes during breaks to avoid stream interruptions</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Admin Dashboard -->
+    <section id="admin-dashboard" class="doc-section">
+      <h2>👑 Admin Dashboard</h2>
+      <p class="section-intro">Features available to administrators</p>
+
+      <h3>System Statistics</h3>
+      <p>The admin dashboard displays real-time system information:</p>
+      <ul>
+        <li><strong>Connected Users:</strong> Number of active moderator sessions</li>
+        <li><strong>Active Overlays:</strong> Number of OBS overlays currently connected</li>
+        <li><strong>Server Uptime:</strong> How long the system has been running</li>
+        <li><strong>Current Configuration:</strong> Overview of active overlay settings</li>
+      </ul>
+
+      <h3>User Management</h3>
+      <p>View and monitor users who have accessed the system:</p>
+      <ul>
+        <li>See who is currently logged in</li>
+        <li>View recent activity logs</li>
+        <li>Monitor permission levels</li>
+      </ul>
+
+      <h3>Navigation</h3>
+      <p>From the admin dashboard, you can access:</p>
+      <ul>
+        <li><strong>Config Panel:</strong> Customize overlay appearance</li>
+        <li><strong>Moderator Panel:</strong> Control counters and messages</li>
+        <li><strong>Admin Panel:</strong> System overview and management</li>
+      </ul>
+    </section>
+
+    <!-- Troubleshooting -->
+    <section id="troubleshooting" class="doc-section">
+      <h2>🔧 Troubleshooting</h2>
+      <p class="section-intro">Common issues and solutions</p>
+
+      <div class="troubleshoot-box">
+        <h4>Problem: Can't login / Keep getting redirected</h4>
+        <p><strong>Solutions:</strong></p>
+        <ul>
+          <li>Make sure the Discord bot is in your server</li>
+          <li>Verify you have Administrator or Manage Members permission</li>
+          <li>Clear your browser cookies and cache</li>
+          <li>Try a different browser or incognito mode</li>
+          <li>Check that you're logging in with the correct Discord account</li>
+        </ul>
+      </div>
+
+      <div class="troubleshoot-box">
+        <h4>Problem: Overlay not appearing in OBS</h4>
+        <p><strong>Solutions:</strong></p>
+        <ul>
+          <li>Verify the Browser Source URL is correct</li>
+          <li>Check Width (1920) and Height (1080) settings</li>
+          <li>Right-click source → Interact to check for errors</li>
+          <li>Try refreshing the browser source</li>
+          <li>Ensure your internet connection is stable</li>
+        </ul>
+      </div>
+
+      <div class="troubleshoot-box">
+        <h4>Problem: Changes not updating in real-time</h4>
+        <p><strong>Solutions:</strong></p>
+        <ul>
+          <li>Check connection status in moderator panel (green = connected)</li>
+          <li>Refresh the browser source in OBS</li>
+          <li>Verify your session hasn't expired (try logging in again)</li>
+          <li>Check server status and internet connection</li>
+          <li>Look for error messages in browser console (F12)</li>
+        </ul>
+      </div>
+
+      <div class="troubleshoot-box">
+        <h4>Problem: "Insufficient Permissions" error</h4>
+        <p><strong>Solutions:</strong></p>
+        <ul>
+          <li>Verify you have Administrator or Manage Members permission in your Discord server</li>
+          <li>Make sure the bot is present in the same server where you have permissions</li>
+          <li>Try re-inviting the bot to your server</li>
+          <li>Contact server owner to verify your role permissions</li>
+        </ul>
+      </div>
+
+      <div class="troubleshoot-box">
+        <h4>Problem: Session keeps expiring</h4>
+        <p><strong>Solutions:</strong></p>
+        <ul>
+          <li>Sessions last 7 days - login again if expired</li>
+          <li>Make sure cookies are enabled in your browser</li>
+          <li>Don't use incognito/private browsing mode</li>
+          <li>Check browser cookie settings allow third-party cookies</li>
+        </ul>
+      </div>
+
+      <h3>Still Having Issues?</h3>
+      <div class="info-box">
+        <p>If you're still experiencing problems:</p>
+        <ul>
+          <li>Check the browser console (F12) for error messages</li>
+          <li>Verify server status at /health endpoint</li>
+          <li>Contact the system administrator</li>
+          <li>Report issues on the GitHub repository</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>Kill Feed System v2.0 Documentation</p>
+    </div>
+  </div>
+</body>
+</html>

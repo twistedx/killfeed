@@ -1,7 +1,8 @@
 // Auto-detect server URL (works in dev and production)
 const SERVER_URL = window.location.origin;
-const socket = io(SERVER_URL);
-console.log('Connecting to:', SERVER_URL);
+
+// Socket will be initialized after auth check with server parameter
+let socket = null;
     
     const loadingScreen = document.getElementById('loadingScreen');
     const accessDenied = document.getElementById('accessDenied');
@@ -67,7 +68,21 @@ console.log('Connecting to:', SERVER_URL);
         } else {
           moderatorAvatarEl.src = `https://cdn.discordapp.com/embed/avatars/${parseInt(user.discriminator) % 5}.png`;
         }
-        
+
+        // Initialize Socket.IO with server parameter
+        if (user.selectedServer) {
+          socket = io(SERVER_URL, {
+            query: { server: user.selectedServer.id }
+          });
+          console.log('Socket.IO connecting to server:', user.selectedServer.name);
+          initializeSocketHandlers();
+        } else {
+          console.error('No server selected');
+          alert('Error: No server selected. Please re-authenticate.');
+          window.location.href = '/';
+          return;
+        }
+
         // Show control panel
         loadingScreen.style.display = 'none';
         controlPanel.style.display = 'block';
@@ -77,24 +92,26 @@ console.log('Connecting to:', SERVER_URL);
         window.location.href = '/?error=auth_check_failed';
       }
     }
-    
-    // Connection status
-    socket.on('connect', () => {
-      console.log('Connected to server');
-      if (isAuthenticated) {
-        statusIndicator.classList.remove('disconnected');
-      }
-    });
-    
-    socket.on('disconnect', () => {
-      console.log('Disconnected from server');
-      if (isAuthenticated) {
-        statusIndicator.classList.add('disconnected');
-      }
-    });
-    
-    // Listen for config updates to get custom labels
-    socket.on('configUpdate', (config) => {
+
+    // Initialize socket event handlers
+    function initializeSocketHandlers() {
+      // Connection status
+      socket.on('connect', () => {
+        console.log('Connected to server');
+        if (isAuthenticated) {
+          statusIndicator.classList.remove('disconnected');
+        }
+      });
+
+      socket.on('disconnect', () => {
+        console.log('Disconnected from server');
+        if (isAuthenticated) {
+          statusIndicator.classList.add('disconnected');
+        }
+      });
+
+      // Listen for config updates to get custom labels
+      socket.on('configUpdate', (config) => {
       if (!isAuthenticated) return;
       console.log('Config update received:', config);
       
@@ -188,9 +205,11 @@ console.log('Connecting to:', SERVER_URL);
         messageStatusEl.classList.add('hidden');
       }
     });
-    
+    }
+
     // Counter control functions
     function incrementCounter(type) {
+      if (!socket) return;
       socket.emit('incrementCounter', type);
     }
     
@@ -242,6 +261,37 @@ console.log('Connecting to:', SERVER_URL);
       socket.emit('triggerCelebration', type);
     }
     
+    // Bot invite functionality
+    const inviteBotBtn = document.getElementById('inviteBotBtn');
+
+    if (inviteBotBtn) {
+      inviteBotBtn.addEventListener('click', async () => {
+        try {
+          // Fetch the bot CLIENT_ID from the server
+          const response = await fetch('/api/bot-info');
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch bot info');
+          }
+
+          const data = await response.json();
+
+          if (!data.clientId) {
+            throw new Error('Client ID not found');
+          }
+
+          // Generate Discord bot invite URL
+          const inviteUrl = `https://discord.com/oauth2/authorize?client_id=${data.clientId}&permissions=0&scope=bot%20applications.commands`;
+
+          // Open invite URL in new tab
+          window.open(inviteUrl, '_blank');
+        } catch (error) {
+          console.error('Error opening bot invite:', error);
+          alert('Could not generate bot invite link. Please contact the administrator.');
+        }
+      });
+    }
+
     // Check auth on page load
     checkAuth();
 

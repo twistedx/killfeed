@@ -1,6 +1,19 @@
 // obs-overlay.js - Complete OBS Overlay Logic
 
-const socket = io(window.location.origin);
+// Get server ID from URL parameter
+const urlParams = new URLSearchParams(window.location.search);
+const serverId = urlParams.get('server');
+
+if (!serverId) {
+  console.error('❌ No server ID provided in URL. Add ?server=YOUR_SERVER_ID to the URL.');
+  document.body.innerHTML = '<div style="color: white; text-align: center; padding: 50px; font-family: Arial;">❌ Error: No server ID provided. Please add ?server=YOUR_SERVER_ID to the URL.</div>';
+  throw new Error('Server ID required');
+}
+
+// Connect to Socket.IO with server parameter
+const socket = io(window.location.origin, {
+  query: { server: serverId }
+});
 
 // DOM Elements
 const countersContainer = document.getElementById('countersContainer');

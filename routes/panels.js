@@ -2,23 +2,25 @@
 const express = require('express');
 const router = express.Router();
 const path = require('path');
-const { requireAdmin, requireModerator } = require('../middleware/auth');
+const { requireAdmin, requireModerator, validateServerAccess } = require('../middleware/auth');
 
-// Dashboard - requires any authentication
-router.get('/dashboard.html', requireModerator, (req, res) => {
+// Dashboard - requires authentication and server access
+router.get('/dashboard.html', requireModerator, validateServerAccess, (req, res) => {
   res.sendFile(path.join(__dirname, '../public/dashboard.html'));
 });
 
-// Other routes...
-router.get('/moderator-panel.html', requireModerator, (req, res) => {
+// Moderator panel - requires moderator access and server access
+router.get('/moderator-panel.html', requireModerator, validateServerAccess, (req, res) => {
   res.sendFile(path.join(__dirname, '../public/moderator-panel.html'));
 });
 
-router.get('/admin-panel.html', requireAdmin, (req, res) => {
+// Admin panel - requires admin access and server access
+router.get('/admin-panel.html', requireAdmin, validateServerAccess, (req, res) => {
   res.sendFile(path.join(__dirname, '../public/admin-panel.html'));
 });
 
-router.get('/config-panel.html', requireAdmin, (req, res) => {
+// Config panel - requires admin access and server access
+router.get('/config-panel.html', requireAdmin, validateServerAccess, (req, res) => {
   res.sendFile(path.join(__dirname, '../public/config-panel.html'));
 });
 

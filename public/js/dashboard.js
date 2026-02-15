@@ -1,13 +1,8 @@
 // Auto-detect server URL (works in dev and production)
 const SERVER_URL = window.location.origin;
-const socket = io(SERVER_URL, {
-  transports: ['websocket', 'polling'],
-  reconnection: true,
-  reconnectionDelay: 1000,
-  reconnectionDelayMax: 5000,
-  reconnectionAttempts: 5
-});
-console.log('Connecting to:', SERVER_URL);
+
+// Socket will be initialized after auth check to include server ID
+let socket = null;
     
     const loadingScreen = document.getElementById('loadingScreen');
     const dashboardContent = document.getElementById('dashboardContent');
@@ -120,9 +115,34 @@ console.log('Connecting to:', SERVER_URL);
         console.log('User:', currentUser.username);
         console.log('Admin:', currentUser.isAdmin);
         console.log('Moderator:', currentUser.isModerator);
+        console.log('Selected Server:', currentUser.selectedServer?.name);
         console.log('Loading dashboard...');
         console.log('==========================================\n');
-        
+
+        // Initialize Socket.IO with server parameter
+        if (currentUser.selectedServer) {
+          socket = io(SERVER_URL, {
+            query: { server: currentUser.selectedServer.id },
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            reconnectionAttempts: 5
+          });
+          console.log('Socket.IO connecting to server:', currentUser.selectedServer.name);
+
+          // Socket events for stats
+          socket.on('countersUpdate', (counters) => {
+            document.getElementById('statKills').textContent = counters.kills || 0;
+            document.getElementById('statExtracted').textContent = counters.extracted || 0;
+            document.getElementById('statKia').textContent = counters.kia || 0;
+          });
+
+          socket.on('approvedModeratorsUpdate', (mods) => {
+            document.getElementById('statModerators').textContent = mods.length;
+          });
+        }
+
         // Load dashboard
         loadDashboard();
         
@@ -139,7 +159,7 @@ console.log('Connecting to:', SERVER_URL);
     function loadDashboard() {
       // Set user info
       document.getElementById('userName').textContent = `${currentUser.username}#${currentUser.discriminator}`;
-      
+
       if (currentUser.isAdmin) {
         document.getElementById('userRole').textContent = '👑 Administrator';
         document.getElementById('welcomeSubtitle').textContent = 'Full system access';
@@ -147,25 +167,112 @@ console.log('Connecting to:', SERVER_URL);
         document.getElementById('userRole').textContent = '🎮 Moderator';
         document.getElementById('welcomeSubtitle').textContent = 'Stream control access';
       }
-      
+
       // Set avatar
       if (currentUser.avatar) {
         document.getElementById('userAvatar').src = `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png`;
       } else {
         document.getElementById('userAvatar').src = `https://cdn.discordapp.com/embed/avatars/${parseInt(currentUser.discriminator) % 5}.png`;
       }
-      
+
+      // Setup server selector if user has access to multiple servers
+      setupServerSelector();
+
       // Show stats for admins
       if (currentUser.isAdmin) {
         statsGrid.style.display = 'grid';
       }
-      
+
       // Load action cards based on role
       loadActionCards();
-      
+
       // Show dashboard
       loadingScreen.style.display = 'none';
       dashboardContent.style.display = 'block';
+    }
+
+    // Setup server selector dropdown
+    function setupServerSelector() {
+      if (!currentUser.sharedGuilds || currentUser.sharedGuilds.length === 0) {
+        return;
+      }
+
+      const serverSelector = document.getElementById('serverSelector');
+      const serverDropdown = document.getElementById('serverDropdown');
+
+      // Only show selector if user has access to servers
+      if (currentUser.sharedGuilds.length > 0) {
+        serverSelector.style.display = 'flex';
+
+        // Populate dropdown with user's servers
+        serverDropdown.innerHTML = '';
+        currentUser.sharedGuilds.forEach(guild => {
+          const option = document.createElement('option');
+          option.value = guild.guildId;
+          option.textContent = guild.guildName;
+
+          // Mark as selected if it's the current server
+          if (currentUser.selectedServer && guild.guildId === currentUser.selectedServer.id) {
+            option.selected = true;
+          }
+
+          serverDropdown.appendChild(option);
+        });
+
+        // Handle server switching
+        serverDropdown.addEventListener('change', handleServerSwitch);
+      }
+    }
+
+    // Handle server switching
+    async function handleServerSwitch(event) {
+      const newServerId = event.target.value;
+
+      // Don't switch if it's the same server
+      if (currentUser.selectedServer && newServerId === currentUser.selectedServer.id) {
+        return;
+      }
+
+      const selectedGuild = currentUser.sharedGuilds.find(g => g.guildId === newServerId);
+      if (!selectedGuild) {
+        alert('Error: Server not found');
+        return;
+      }
+
+      // Confirm switch
+      if (!confirm(`Switch to controlling ${selectedGuild.guildName}?`)) {
+        // Reset dropdown to current server
+        event.target.value = currentUser.selectedServer.id;
+        return;
+      }
+
+      try {
+        // Call server switch endpoint
+        const response = await fetch('/auth/switch-server', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({ serverId: newServerId })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to switch server');
+        }
+
+        const result = await response.json();
+        console.log('Server switched:', result);
+
+        // Reload the page to reinitialize with new server
+        window.location.reload();
+
+      } catch (error) {
+        console.error('Error switching server:', error);
+        alert('Failed to switch server. Please try again.');
+        // Reset dropdown to current server
+        event.target.value = currentUser.selectedServer.id;
+      }
     }
     
     function loadActionCards() {
@@ -206,37 +313,33 @@ console.log('Connecting to:', SERVER_URL);
       });
     }
     
-    // Socket events for stats
-    socket.on('countersUpdate', (counters) => {
-      document.getElementById('statKills').textContent = counters.kills || 0;
-      document.getElementById('statExtracted').textContent = counters.extracted || 0;
-      document.getElementById('statKia').textContent = counters.kia || 0;
-    });
-    
-    socket.on('approvedModeratorsUpdate', (mods) => {
-      document.getElementById('statModerators').textContent = mods.length;
-    });
-    
     // Show OBS info
     function showOBSInfo() {
+      if (!currentUser || !currentUser.selectedServer) {
+        alert('Error: No server selected');
+        return;
+      }
+
       const baseUrl = window.location.origin;
-      
-      const message = `OBS Browser Source URLs:
+      const serverId = currentUser.selectedServer.id;
+      const serverName = currentUser.selectedServer.name;
 
-📊 Counters Overlay:
-${baseUrl}/obs-overlay.html
+      const message = `OBS Browser Source URLs for ${serverName}:
 
-📢 Message Overlay:
-${baseUrl}/obs-message.html
+📺 Kill Feed Overlay (All-in-One):
+${baseUrl}/obs-overlay.html?server=${serverId}
 
-🎉 Celebration Overlay:
-${baseUrl}/obs-celebration.html
-
-Add these as Browser Sources in OBS:
+Add this as a Browser Source in OBS:
 - Width: 1920
 - Height: 1080
-- Check "Shutdown source when not visible"`;
-      
+- Check "Shutdown source when not visible"
+
+⚠️ IMPORTANT: Each Discord server has its own overlay.
+Make sure to use the correct server ID in the URL.
+
+Server: ${serverName}
+Server ID: ${serverId}`;
+
       alert(message);
     }
     

@@ -2,18 +2,15 @@
 const fs = require('fs');
 const path = require('path');
 
-let counters = { kills: 0, extracted: 0, kia: 0 };
-let message = { text: '', visible: false };
-let overlayConfigs = { default: loadConfig() };
+// Per-server storage (keyed by guild ID)
+let serverStates = {};
 let approvedModerators = {};
 let adminSockets = new Set();
 
 // Use Render persistent disk if available, otherwise use local ./data
-const dataPath = process.env.PERSISTENT_STORAGE_PATH 
+const dataPath = process.env.PERSISTENT_STORAGE_PATH
   ? path.join(process.env.PERSISTENT_STORAGE_PATH, 'data')
   : path.join(__dirname, '../data');
-
-const CONFIG_FILE = path.join(dataPath, 'overlay-config.json');
 
 function getDefaultConfig() {
   return {
@@ -55,31 +52,47 @@ function getDefaultConfig() {
   };
 }
 
-function loadConfig() {
+// Load config for a specific server
+function loadConfig(serverId) {
+  const configFile = path.join(dataPath, `overlay-config-${serverId}.json`);
   try {
-    if (fs.existsSync(CONFIG_FILE)) {
-      const data = fs.readFileSync(CONFIG_FILE, 'utf8');
-      console.log('✅ Loaded saved overlay config');
+    if (fs.existsSync(configFile)) {
+      const data = fs.readFileSync(configFile, 'utf8');
+      console.log(`✅ Loaded saved overlay config for server ${serverId}`);
       return JSON.parse(data);
     }
   } catch (error) {
-    console.error('Failed to load config:', error);
+    console.error(`Failed to load config for server ${serverId}:`, error);
   }
-  console.log('📋 Using default overlay config');
+  console.log(`📋 Using default overlay config for server ${serverId}`);
   return getDefaultConfig();
 }
 
-function saveConfig(config) {
+// Save config for a specific server
+function saveConfig(serverId, config) {
+  const configFile = path.join(dataPath, `overlay-config-${serverId}.json`);
   try {
-    const dir = path.dirname(CONFIG_FILE);
+    const dir = path.dirname(configFile);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
-    console.log('💾 Config saved to disk');
+    fs.writeFileSync(configFile, JSON.stringify(config, null, 2));
+    console.log(`💾 Config saved to disk for server ${serverId}`);
   } catch (error) {
-    console.error('Failed to save config:', error);
+    console.error(`Failed to save config for server ${serverId}:`, error);
   }
+}
+
+// Get or initialize server state
+function getServerState(serverId) {
+  if (!serverStates[serverId]) {
+    serverStates[serverId] = {
+      counters: { kills: 0, extracted: 0, kia: 0 },
+      message: { text: '', visible: false },
+      config: loadConfig(serverId)
+    };
+  }
+  return serverStates[serverId];
 }
 
 module.exports = (io, sessionMiddleware) => {
@@ -94,176 +107,232 @@ module.exports = (io, sessionMiddleware) => {
       next();
     });
   };
-  
+
   // Use session middleware for Socket.IO
   io.use(wrap(sessionMiddleware));
-  
+
   // Socket.IO connection handler
   io.on('connection', (socket) => {
-    // Get user from session
+    // Get user and server from session
     const session = socket.request.session;
     const user = session?.user;
-    
-    if (user) {
-      socket.user = user;
-      console.log(`✅ Authenticated: ${user.username} (${user.isAdmin ? 'Admin' : 'Moderator'})`);
-    } else {
-      console.log(`📺 OBS Overlay connected: ${socket.id}`);
+    const selectedServer = session?.selectedServer;
+
+    // Get server ID from query parameter (for OBS overlays) or session (for control panels)
+    const serverId = socket.handshake.query.server || selectedServer?.id;
+
+    if (!serverId) {
+      console.warn(`⚠️ No server ID provided for socket ${socket.id}`);
+      socket.disconnect();
+      return;
     }
 
-    // Send current state to all clients (authenticated or not)
-    socket.emit('configUpdate', overlayConfigs.default);
-    socket.emit('countersUpdate', counters);
-    socket.emit('messageUpdate', message);
+    // Join server-specific room
+    socket.join(`server:${serverId}`);
+    socket.serverId = serverId;
+
+    // Get server state
+    const state = getServerState(serverId);
+
+    if (user) {
+      socket.user = user;
+      socket.selectedServer = selectedServer;
+      console.log(`✅ Authenticated: ${user.username} (${user.isAdmin ? 'Admin' : 'Moderator'}) - Server: ${selectedServer.name}`);
+    } else {
+      console.log(`📺 OBS Overlay connected: ${socket.id} - Server: ${serverId}`);
+    }
+
+    // Send current state for this server
+    socket.emit('configUpdate', state.config);
+    socket.emit('countersUpdate', state.counters);
+    socket.emit('messageUpdate', state.message);
 
     // Handle authenticated users
     if (socket.user) {
-      if (socket.user.isAdmin) {
+      // Validate user has access to this server
+      const hasServerAccess = socket.user.sharedGuilds.some(g => g.guildId === serverId);
+      if (!hasServerAccess) {
+        console.warn(`❌ ${socket.user.username} has no access to server ${serverId}`);
+        socket.disconnect();
+        return;
+      }
+
+      // Check if user is admin for THIS specific server
+      const serverGuild = socket.user.sharedGuilds.find(g => g.guildId === serverId);
+      const isServerAdmin = serverGuild?.isAdmin || false;
+      const isServerMod = serverGuild?.isModerator || false;
+
+      if (isServerAdmin) {
         adminSockets.add(socket.id);
       }
-      
-      if (socket.user.isModerator || socket.user.isAdmin) {
+
+      if (isServerMod || isServerAdmin) {
         approvedModerators[socket.id] = {
           socketId: socket.id,
+          serverId: serverId,
           name: socket.user.username,
           discordId: socket.user.id,
-          isAdmin: socket.user.isAdmin,
+          isAdmin: isServerAdmin,
           connectedAt: new Date().toISOString()
         };
-        
-        // Notify all admins
+
+        // Notify all admins in THIS server
         adminSockets.forEach(adminId => {
-          io.to(adminId).emit('approvedModeratorsUpdate', Object.values(approvedModerators));
+          const adminSocket = io.sockets.sockets.get(adminId);
+          if (adminSocket && adminSocket.serverId === serverId) {
+            io.to(adminId).emit('approvedModeratorsUpdate',
+              Object.values(approvedModerators).filter(m => m.serverId === serverId)
+            );
+          }
         });
       }
     }
 
     const isAdmin = (socketId) => adminSockets.has(socketId);
-    const isApproved = (socketId) => approvedModerators.hasOwnProperty(socketId);
+    const isApprovedForServer = (socketId, serverId) => {
+      const mod = approvedModerators[socketId];
+      return mod && mod.serverId === serverId;
+    };
 
     // Counter events
     socket.on('incrementCounter', (type) => {
-      if (!isApproved(socket.id)) {
+      if (!isApprovedForServer(socket.id, serverId)) {
         console.warn(`Unauthorized increment attempt from ${socket.id}`);
         return;
       }
-      
-      if (counters.hasOwnProperty(type)) {
-        counters[type]++;
-        console.log(`${type} incremented by ${approvedModerators[socket.id].name}: ${counters[type]}`);
-        io.emit('countersUpdate', counters);
+
+      const state = getServerState(serverId);
+      if (state.counters.hasOwnProperty(type)) {
+        state.counters[type]++;
+        console.log(`${type} incremented by ${approvedModerators[socket.id].name}: ${state.counters[type]} (Server: ${serverId})`);
+        io.to(`server:${serverId}`).emit('countersUpdate', state.counters);
       }
     });
 
     socket.on('decrementCounter', (type) => {
-      if (!isApproved(socket.id)) {
+      if (!isApprovedForServer(socket.id, serverId)) {
         console.warn(`Unauthorized decrement attempt from ${socket.id}`);
         return;
       }
-      
-      if (counters.hasOwnProperty(type)) {
-        counters[type] = Math.max(0, counters[type] - 1);
-        console.log(`${type} decremented by ${approvedModerators[socket.id].name}: ${counters[type]}`);
-        io.emit('countersUpdate', counters);
+
+      const state = getServerState(serverId);
+      if (state.counters.hasOwnProperty(type)) {
+        state.counters[type] = Math.max(0, state.counters[type] - 1);
+        console.log(`${type} decremented by ${approvedModerators[socket.id].name}: ${state.counters[type]} (Server: ${serverId})`);
+        io.to(`server:${serverId}`).emit('countersUpdate', state.counters);
       }
     });
 
     socket.on('resetCounters', () => {
-      if (!isApproved(socket.id)) {
+      if (!isApprovedForServer(socket.id, serverId)) {
         console.warn(`Unauthorized reset attempt from ${socket.id}`);
         return;
       }
-      
-      console.log(`Counters reset by ${approvedModerators[socket.id].name}`);
-      counters = { kills: 0, extracted: 0, kia: 0 };
-      io.emit('countersUpdate', counters);
+
+      const state = getServerState(serverId);
+      console.log(`Counters reset by ${approvedModerators[socket.id].name} (Server: ${serverId})`);
+      state.counters = { kills: 0, extracted: 0, kia: 0 };
+      io.to(`server:${serverId}`).emit('countersUpdate', state.counters);
     });
 
     // Message events
     socket.on('updateMessage', (newMessage) => {
-      if (!isApproved(socket.id)) {
+      if (!isApprovedForServer(socket.id, serverId)) {
         console.warn(`Unauthorized message update from ${socket.id}`);
         return;
       }
-      
-      console.log(`Message updated by ${approvedModerators[socket.id].name}`);
-      message = newMessage;
-      io.emit('messageUpdate', message);
+
+      const state = getServerState(serverId);
+      console.log(`Message updated by ${approvedModerators[socket.id].name} (Server: ${serverId})`);
+      state.message = newMessage;
+      io.to(`server:${serverId}`).emit('messageUpdate', state.message);
     });
 
     socket.on('showMessage', () => {
-      if (!isApproved(socket.id)) return;
-      
-      console.log(`Message shown by ${approvedModerators[socket.id].name}`);
-      message.visible = true;
-      io.emit('messageUpdate', message);
+      if (!isApprovedForServer(socket.id, serverId)) return;
+
+      const state = getServerState(serverId);
+      console.log(`Message shown by ${approvedModerators[socket.id].name} (Server: ${serverId})`);
+      state.message.visible = true;
+      io.to(`server:${serverId}`).emit('messageUpdate', state.message);
     });
 
     socket.on('hideMessage', () => {
-      if (!isApproved(socket.id)) return;
-      
-      console.log(`Message hidden by ${approvedModerators[socket.id].name}`);
-      message.visible = false;
-      io.emit('messageUpdate', message);
+      if (!isApprovedForServer(socket.id, serverId)) return;
+
+      const state = getServerState(serverId);
+      console.log(`Message hidden by ${approvedModerators[socket.id].name} (Server: ${serverId})`);
+      state.message.visible = false;
+      io.to(`server:${serverId}`).emit('messageUpdate', state.message);
     });
 
     // Celebration events
     socket.on('triggerCelebration', (type = 'hurrah') => {
-      if (!isApproved(socket.id)) {
+      if (!isApprovedForServer(socket.id, serverId)) {
         console.warn(`Unauthorized celebration from ${socket.id}`);
         return;
       }
-      
-      console.log(`${type} celebration by ${approvedModerators[socket.id].name}`);
-      io.emit('triggerCelebration', type);
+
+      console.log(`${type} celebration by ${approvedModerators[socket.id].name} (Server: ${serverId})`);
+      io.to(`server:${serverId}`).emit('triggerCelebration', type);
     });
 
     // Config events (admin only)
     socket.on('requestConfig', () => {
-      socket.emit('configUpdate', overlayConfigs.default);
+      const state = getServerState(serverId);
+      socket.emit('configUpdate', state.config);
     });
 
     socket.on('updateConfig', (newConfig) => {
-      if (!isAdmin(socket.id)) {
+      if (!isAdmin(socket.id) || !isApprovedForServer(socket.id, serverId)) {
         console.warn(`Unauthorized config update from ${socket.id}`);
         return;
       }
-      
-      console.log('Config updated by admin');
-      overlayConfigs.default = { ...overlayConfigs.default, ...newConfig };
-      saveConfig(overlayConfigs.default);
-      io.emit('configUpdate', overlayConfigs.default);
+
+      const state = getServerState(serverId);
+      console.log(`Config updated by admin (Server: ${serverId})`);
+      state.config = { ...state.config, ...newConfig };
+      saveConfig(serverId, state.config);
+      io.to(`server:${serverId}`).emit('configUpdate', state.config);
     });
 
     socket.on('resetConfig', () => {
-      if (!isAdmin(socket.id)) {
+      if (!isAdmin(socket.id) || !isApprovedForServer(socket.id, serverId)) {
         console.warn(`Unauthorized config reset from ${socket.id}`);
         return;
       }
-      
-      console.log('Config reset by admin');
-      overlayConfigs.default = getDefaultConfig();
-      saveConfig(overlayConfigs.default);
-      io.emit('configUpdate', overlayConfigs.default);
+
+      const state = getServerState(serverId);
+      console.log(`Config reset by admin (Server: ${serverId})`);
+      state.config = getDefaultConfig();
+      saveConfig(serverId, state.config);
+      io.to(`server:${serverId}`).emit('configUpdate', state.config);
     });
 
     // Disconnect
     socket.on('disconnect', () => {
       if (approvedModerators[socket.id]) {
-        console.log(`👋 ${approvedModerators[socket.id].name} disconnected`);
+        const mod = approvedModerators[socket.id];
+        console.log(`👋 ${mod.name} disconnected (Server: ${mod.serverId})`);
         delete approvedModerators[socket.id];
-        
+
+        // Notify all admins in THIS server
         adminSockets.forEach(adminId => {
-          io.to(adminId).emit('approvedModeratorsUpdate', Object.values(approvedModerators));
+          const adminSocket = io.sockets.sockets.get(adminId);
+          if (adminSocket && adminSocket.serverId === serverId) {
+            io.to(adminId).emit('approvedModeratorsUpdate',
+              Object.values(approvedModerators).filter(m => m.serverId === serverId)
+            );
+          }
         });
       }
-      
+
       if (adminSockets.has(socket.id)) {
         adminSockets.delete(socket.id);
       }
-      
+
       if (!socket.user) {
-        console.log(`📺 OBS Overlay disconnected: ${socket.id}`);
+        console.log(`📺 OBS Overlay disconnected: ${socket.id} (Server: ${serverId})`);
       }
     });
   });

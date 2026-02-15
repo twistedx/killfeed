@@ -90,11 +90,20 @@ app.get('/', (req, res) => {
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ 
+  res.json({
     status: 'ok',
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Bot info endpoint - returns CLIENT_ID for invite link generation
+app.get('/api/bot-info', (req, res) => {
+  const discordConfig = require('./config/discord');
+
+  res.json({
+    clientId: discordConfig.CLIENT_ID || null
   });
 });
 
